@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Llorenç Balada Gaggioli</title>
+  <meta name="description" content="Llorenç Balada Gaggioli: Marie Skłodowska-Curie PhD Fellow at CTU Prague and LAAS-CNRS, working on quantum optimal control, polynomial optimization and tensor networks.">
+  <meta name="author" content="Llorenç Balada Gaggioli">
+  <meta property="og:type" content="profile">
+  <meta property="og:title" content="Llorenç Balada Gaggioli">
+  <meta property="og:description" content="Quantum optimal control, polynomial optimization and tensor networks. MSCA PhD Fellow at CTU Prague & LAAS-CNRS.">
+  <meta property="og:image" content="https://llorebaga.github.io/assets/img/profile.jpg">
+  <meta property="og:url" content="https://llorebaga.github.io/">
+  <meta name="theme-color" content="#f7f4ee" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#11171c" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script>
+    // Apply the saved theme before first paint to avoid a flash.
+    try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Llorenç Balada Gaggioli",
+    "jobTitle": "Marie Skłodowska-Curie PhD Fellow",
+    "affiliation": [
+      { "@type": "Organization", "name": "Czech Technical University in Prague" },
+      { "@type": "Organization", "name": "LAAS-CNRS" }
+    ],
+    "email": "mailto:llorenc.balada.gaggioli@fel.cvut.cz",
+    "image": "https://llorebaga.github.io/assets/img/profile.jpg",
+    "url": "https://llorebaga.github.io/",
+    "sameAs": [
+      "https://scholar.google.com/citations?user=3zhaXhgAAAAJ",
+      "https://github.com/llorebaga",
+      "https://www.linkedin.com/in/lloren%C3%A7/"
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <nav class="nav container" aria-label="Main">
+      <a class="brand" href="#top">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="9" r="6"/><circle cx="8" cy="22" r="6"/><circle cx="24" cy="22" r="6"/></svg>
+        <span>Llorenç Balada Gaggioli</span>
+      </a>
+      <button class="menu-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul id="nav-links" class="nav-links">
+        <li><a href="#research">Research</a></li>
+        <li><a href="#publications">Publications</a></li>
+        <li><a href="#activities">Activities</a></li>
+        <li><a href="#cv">CV</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li>
+          <button class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section id="top" class="hero container">
+      <div class="hero-photo">
+        <img id="photo" alt="Portrait of Llorenç Balada Gaggioli" width="480" height="671">
+      </div>
+      <div class="hero-text">
+        <p class="eyebrow" id="role"></p>
+        <h1 id="name"></h1>
+        <p class="tagline" id="tagline"></p>
+        <ul class="affiliations" id="affiliations"></ul>
+        <div class="socials" id="socials"></div>
+        <dl class="stats" id="stats"></dl>
+      </div>
+    </section>
+
+    <!-- News + About -->
+    <section class="container intro-grid">
+      <div class="card news">
+        <h2 class="card-title">Latest news</h2>
+        <ul class="news-list" id="news"></ul>
+      </div>
+      <div class="about">
+        <h2 class="section-title small">About me</h2>
+        <div id="about"></div>
+      </div>
+    </section>
+
+    <!-- Research map -->
+    <section id="research" class="section container">
+      <header class="section-head">
+        <p class="kicker">Research</p>
+        <h2 class="section-title">PhD research map</h2>
+        <p class="lead" id="research-text"></p>
+      </header>
+
+      <div class="map-wrap card">
+        <div class="map-stage">
+          <svg id="map" viewBox="140 40 840 680" role="group" aria-label="Research map: three research topics and the papers that connect them"></svg>
+          <ul class="legend" aria-label="Legend">
+            <li><span class="dot dot-published"></span>Published</li>
+            <li><span class="dot dot-preprint"></span>Preprint</li>
+            <li><span class="dot dot-ring"></span>First author</li>
+          </ul>
+        </div>
+        <aside class="map-panel" id="map-panel" aria-live="polite"></aside>
+      </div>
+    </section>
+
+    <!-- Publications -->
+    <section id="publications" class="section container">
+      <header class="section-head">
+        <p class="kicker">Publications</p>
+        <h2 class="section-title">Papers &amp; preprints</h2>
+      </header>
+      <div class="filters" id="pub-filters" role="toolbar" aria-label="Filter publications"></div>
+      <ol class="pubs" id="pubs"></ol>
+    </section>
+
+    <!-- Activities -->
+    <section id="activities" class="section container">
+      <header class="section-head">
+        <p class="kicker">Activities</p>
+        <h2 class="section-title">Talks, conferences &amp; schools</h2>
+      </header>
+      <div class="filters" id="act-filters" role="toolbar" aria-label="Filter activities"></div>
+      <div id="acts"></div>
+    </section>
+
+    <!-- CV -->
+    <section id="cv" class="section container">
+      <header class="section-head cv-head">
+        <div>
+          <p class="kicker">Curriculum vitae</p>
+          <h2 class="section-title">Path so far</h2>
+        </div>
+        <a class="btn" id="cv-link" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 19h16"/></svg>
+          Full CV (PDF)
+        </a>
+      </header>
+      <ol class="timeline" id="timeline"></ol>
+    </section>
+  </main>
+
+  <footer id="contact" class="footer">
+    <div class="container footer-grid">
+      <div>
+        <h2 class="footer-title">Get in touch</h2>
+        <p><a id="footer-email" class="email-link"></a></p>
+        <address id="address"></address>
+      </div>
+      <div class="funding">
+        <svg class="eu-flag" viewBox="0 0 60 40" role="img" aria-label="Flag of the European Union">
+          <rect width="60" height="40" fill="#003399"/>
+          <g fill="#FFCC00" id="eu-stars"></g>
+        </svg>
+        <p>Funded by the European Union under the Marie Skłodowska-Curie Actions, as part of the <a href="https://tenors-network.eu/">TENORS</a> doctoral network.</p>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© <span id="year"></span> Llorenç Balada Gaggioli</span>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <noscript><p class="container">This site needs JavaScript to show its content. Email: llorenc.balada.gaggioli@fel.cvut.cz</p></noscript>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
