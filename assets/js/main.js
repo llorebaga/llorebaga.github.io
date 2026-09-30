@@ -41,8 +41,7 @@
     arrow: "M6.4 18.3 5 16.9l9.6-9.6H8v-2h10v10h-2V8.7l-9.6 9.6Z",
     target: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z",
     cursor: "M5 3l14 7-6 2-2 6L5 3Z",
-    quote: "M4 11.5C4 7.9 6.2 5.3 9.6 4.5l.6 1.7C8.3 6.9 7.3 8.3 7.2 10H10v7H4v-5.5Zm10 0c0-3.6 2.2-6.2 5.6-7l.6 1.7c-1.9.7-2.9 2.1-3 3.8H20v7h-6v-5.5Z",
-    calendar: "M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm12 8H5v9h14v-9Z"
+    quote: "M4 11.5C4 7.9 6.2 5.3 9.6 4.5l.6 1.7C8.3 6.9 7.3 8.3 7.2 10H10v7H4v-5.5Zm10 0c0-3.6 2.2-6.2 5.6-7l.6 1.7c-1.9.7-2.9 2.1-3 3.8H20v7h-6v-5.5Z"
   };
 
   const P = S.person;
@@ -67,12 +66,6 @@
     social(P.links.linkedin, "LinkedIn", ICONS.linkedin),
     social(P.links.cv, "CV", ICONS.cv)
   );
-  const nextEvent = S.activities.filter((a) => ymKey(a.date) > nowKey).sort((a, b) => ymKey(a.date) - ymKey(b.date))[0];
-  if (nextEvent) {
-    const nu = $("#next-up");
-    nu.hidden = false;
-    nu.append(icon(ICONS.calendar), h("span", { class: "next-label" }, "Next up"), `${nextEvent.title}, ${nextEvent.place} · ${fmtMonth(nextEvent.date)}`);
-  }
 
   // ---------- news & about ----------
   $("#news").append(...S.news.map((n) =>
@@ -233,7 +226,9 @@
       h("ul", { class: "panel-topics", style: "gap:4px;margin-bottom:16px" }, ...papers.map((p) =>
         h("li", {}, h("button", { type: "button", onclick: () => select({ paper: p.id }), onmouseenter: () => highlight({ paper: p.id }), onmouseleave: () => highlight(selected) },
           h("p", { style: "margin:0;font-size:14px" }, h("strong", {}, p.id), " · ", p.title))))),
-      h("div", { class: "links" }, h("a", { class: "link-btn", href: "#publications", onclick: (e) => { e.preventDefault(); setPubFilter(k); $("#publications").scrollIntoView(); } }, icon(ICONS.arrow), "Filter publications"))
+      h("div", { class: "links" },
+        window.SITE.explainers && window.SITE.explainers[k] ? h("a", { class: "link-btn", href: "#explained", onclick: (e) => { e.preventDefault(); if (window.Explainer) window.Explainer.open(k); } }, icon(ICONS.cursor), "Explain it simply") : null,
+        h("a", { class: "link-btn", href: "#publications", onclick: (e) => { e.preventDefault(); setPubFilter(k); $("#publications").scrollIntoView(); } }, icon(ICONS.arrow), "Filter publications"))
     );
   }
   function render(state) {
@@ -359,17 +354,6 @@
   $("#cite-link").addEventListener("click", (e) => copyText(`${location.origin}${location.pathname}#pub-${citing.id}`, e.currentTarget, "Link copied ✓"));
   citeDialog.addEventListener("click", (e) => { if (e.target === citeDialog) citeDialog.close(); });
 
-  // ---------- code ----------
-  const LANG_COLOR = { "Julia": "#9558b2", "Jupyter Notebook": "#da5b0b", "Python": "#3572a5" };
-  $("#repos").append(...S.software.map((r) =>
-    h("li", { class: "repo card" },
-      h("a", { class: "repo-name", href: r.url, target: "_blank", rel: "noopener" }, icon(ICONS.github), h("span", {}, r.name), icon(ICONS.arrow)),
-      h("p", {}, r.description),
-      h("div", { class: "repo-foot" },
-        h("span", { class: "lang" }, h("span", { class: "lang-dot", style: `background:${LANG_COLOR[r.language] || "var(--ink-faint)"}` }), r.language),
-        r.paper ? h("a", { class: "repo-paper", href: `#pub-${r.paper}`, onclick: (e) => { e.preventDefault(); focusPub(r.paper); } }, `Paper: ${r.paper} →`) : null))
-  ));
-
   // ---------- activities ----------
   const KIND = { conference: "Conference", workshop: "Workshop", school: "School", visit: "Research visit", course: "Course" };
   const KIND_COLOR = { conference: "var(--blue)", workshop: "var(--green)", school: "var(--yellow)", visit: "#c77d9b", course: "var(--ink-faint)" };
@@ -407,10 +391,6 @@
     ));
   }
   renderActs();
-  $("#next-up").addEventListener("click", () => {
-    const chip = actBar.querySelector('[data-key="upcoming"]');
-    if (chip) chip.click();
-  });
 
   // Shared links like /#pub-UGS open with that paper highlighted.
   const deep = location.hash.match(/^#pub-(.+)$/);
@@ -485,7 +465,7 @@
   syncTheme();
 
   if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    const els = document.querySelectorAll(".section-head, .map-wrap, .intro-grid > *, .pub, .repo, .act-year, .tl");
+    const els = document.querySelectorAll(".section-head, .map-wrap, .intro-grid > *, .pub, .act-year, .tl");
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
     }, { rootMargin: "0px 0px -8% 0px" });

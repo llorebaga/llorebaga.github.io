@@ -14,7 +14,7 @@ Everything you'd want to edit lives in **[`assets/js/data.js`](assets/js/data.js
 | News items on the front page | `news` (link one to a paper with `paper: "ID"`) |
 | About / research text | `about`, `research` |
 | Papers | `publications` (newest first; published ones also get a `cite` block for BibTeX) |
-| Code cards | `software` (link each repo to its paper with `paper: "ID"`) |
+| "Research, explained" texts | `explainers` (the simulations themselves are in `assets/js/explain.js`) |
 | Talks, conferences, schools, visits | `activities` |
 | CV timeline | `cv` |
 
@@ -67,6 +67,7 @@ index.html            page shell and section layout
 assets/css/style.css  styles (light + dark theme)
 assets/js/data.js     all content
 assets/js/main.js     rendering, research map, filters
+assets/js/explain.js  the three interactive "Research, explained" simulations
 assets/img/           photo and favicon
 404.html              "page not found" page
 ```

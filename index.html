@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=3">
+  <link rel="stylesheet" href="assets/css/style.css?v=4">
   <script>
     // Apply the saved theme before first paint to avoid a flash.
     try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
@@ -58,7 +58,6 @@
       <ul id="nav-links" class="nav-links">
         <li><a href="#research">Research</a></li>
         <li><a href="#publications">Publications</a></li>
-        <li><a href="#code">Code</a></li>
         <li><a href="#activities">Activities</a></li>
         <li><a href="#cv">CV</a></li>
         <li><a href="#contact">Contact</a></li>
@@ -84,7 +83,6 @@
         <p class="tagline" id="tagline"></p>
         <ul class="affiliations" id="affiliations"></ul>
         <div class="socials" id="socials"></div>
-        <a class="next-up" id="next-up" href="#activities" hidden></a>
       </div>
     </section>
 
@@ -121,6 +119,17 @@
       </div>
     </section>
 
+    <!-- Research, explained -->
+    <section id="explained" class="section container">
+      <header class="section-head">
+        <p class="kicker">Research, explained</p>
+        <h2 class="section-title">What I work on, in three experiments</h2>
+        <p class="lead">No equations needed. Each one is a small, real simulation of an idea behind my research.</p>
+      </header>
+      <div class="ex-tabs" role="tablist" aria-label="Research topics" id="ex-tabs"></div>
+      <div id="ex-panels"></div>
+    </section>
+
     <!-- Publications -->
     <section id="publications" class="section container">
       <header class="section-head">
@@ -129,16 +138,6 @@
       </header>
       <div class="filters" id="pub-filters" role="toolbar" aria-label="Filter publications"></div>
       <ol class="pubs" id="pubs"></ol>
-    </section>
-
-    <!-- Code -->
-    <section id="code" class="section container">
-      <header class="section-head">
-        <p class="kicker">Code</p>
-        <h2 class="section-title">Software &amp; reproducible research</h2>
-        <p class="lead">Most papers come with open-source code, so every result can be reproduced.</p>
-      </header>
-      <ul class="repos" id="repos"></ul>
     </section>
 
     <!-- Activities -->
@@ -205,7 +204,8 @@
 
   <noscript><p class="container">This site needs JavaScript to show its content. Email: llorenc.balada.gaggioli@fel.cvut.cz</p></noscript>
 
-  <script src="assets/js/data.js?v=3"></script>
-  <script src="assets/js/main.js?v=3"></script>
+  <script src="assets/js/data.js?v=4"></script>
+  <script src="assets/js/main.js?v=4"></script>
+  <script src="assets/js/explain.js?v=4"></script>
 </body>
 </html>

@@ -182,15 +182,39 @@ window.SITE = {
     }
   ],
 
-  // Public code. paper: id from `publications` the repo accompanies.
-  software: [
-    { name: "LRPOP", url: "https://github.com/llorebaga/LRPOP", language: "Julia", paper: "LRPOP", description: "Global optimization of low-rank polynomials: SDP relaxations whose size scales with the CP rank instead of the number of variables." },
-    { name: "SLPOP", url: "https://github.com/llorebaga/SLPOP", language: "Julia", paper: "ComPOP", description: "Moment-SOS hierarchies for polynomial optimization problems with composition or tensor train structure." },
-    { name: "LR_2qubit", url: "https://github.com/llorebaga/LR_2qubit", language: "Julia", paper: "LR2Q", description: "Determinantal geometry of two-qubit gates: low-rank distances in the Weyl chamber." },
-    { name: "UGS", url: "https://github.com/llorebaga/UGS", language: "Jupyter Notebook", paper: "UGS", description: "Global quantum optimal control via polynomial optimization: unitary gate synthesis with a certificate of globality." },
-    { name: "QCMPO", url: "https://github.com/llorebaga/QCMPO", language: "Jupyter Notebook", paper: "TEMPO", description: "Matrix product operators for time evolution and optimal control of many-body quantum systems." },
-    { name: "RandomSE", url: "https://github.com/llorebaga/RandomSE", language: "Jupyter Notebook", paper: "RSE", description: "Numerical study of the random Schrödinger equation for modelling noisy quantum control." }
-  ],
+  // "Research, explained": plain-language text next to each interactive visualization.
+  explainers: {
+    qc: {
+      tab: "Steering qubits",
+      title: "Steering a qubit",
+      body: [
+        "A qubit, the building block of a quantum computer, can be pictured as an arrow pointing somewhere on a sphere. North means 0, south means 1, and every direction in between is a quantum superposition of the two.",
+        "We move the arrow with carefully shaped pulses of microwaves or laser light. Quantum control is the art of designing those pulses so the qubit ends up exactly where we want, as fast and as reliably as possible, and for machines with many qubits at once."
+      ],
+      tryIt: "Drag the bars to shape the pulse and steer the arrow from north (0) to the target at the south pole (1). Or press Optimize and let the computer search for you. Drag the sphere to rotate it.",
+      papers: ["QCPOP", "UGS", "RCQC", "RSE"]
+    },
+    po: {
+      tab: "Finding the true best",
+      title: "Finding the true best",
+      body: [
+        "Designing the best pulse is an optimization problem: among countless options, find the one that works best. Picture every option as a point in a landscape, where lower is better.",
+        "Most methods behave like a ball rolling downhill. They quickly find a valley, but not necessarily the deepest one. Polynomial optimization works differently: it raises a mathematical floor from below that can never cross the landscape. Where the floor stops is a proof that nothing lies lower, a certified global optimum."
+      ],
+      tryIt: "Click anywhere on the landscape to drop a ball, then press Certify to raise the floor. Try a new landscape to see it again.",
+      papers: ["QCPOP", "UGS", "RCQC", "LRPOP", "ComPOP"]
+    },
+    lr: {
+      tab: "Hidden simplicity",
+      title: "Hidden simplicity",
+      body: [
+        "Exact descriptions of quantum systems grow exponentially: every extra qubit doubles the amount of numbers needed. Around 50 qubits, even the largest supercomputers run out of memory.",
+        "Luckily, many real problems hide a simple structure. Just as a photo can be rebuilt from a handful of simple patterns, tensor networks and low-rank decompositions describe enormous objects with a tiny fraction of the numbers. My work exploits this structure so that control and optimization methods scale to large systems."
+      ],
+      tryIt: "Rebuild the photo from more or fewer patterns, then add qubits and watch the exact description hit an exponential wall.",
+      papers: ["TEMPO", "LR2Q", "LRPOP", "ComPOP"]
+    }
+  },
 
   /*
    * Activities. kind: conference | workshop | school | visit | course
