@@ -70,3 +70,6 @@ assets/js/main.js     rendering, research map, filters
 assets/img/           photo and favicon
 404.html              "page not found" page
 ```
+
+After changing CSS or JS, bump the `?v=` number on the asset links in `index.html` (and the
+stylesheet link in `404.html`) so browsers fetch the new files instead of a cached copy.
