@@ -40,7 +40,9 @@
     doc: "M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm7 1.5V9h5.5L13 3.5Z",
     arrow: "M6.4 18.3 5 16.9l9.6-9.6H8v-2h10v10h-2V8.7l-9.6 9.6Z",
     target: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z",
-    cursor: "M5 3l14 7-6 2-2 6L5 3Z"
+    cursor: "M5 3l14 7-6 2-2 6L5 3Z",
+    quote: "M4 11.5C4 7.9 6.2 5.3 9.6 4.5l.6 1.7C8.3 6.9 7.3 8.3 7.2 10H10v7H4v-5.5Zm10 0c0-3.6 2.2-6.2 5.6-7l.6 1.7c-1.9.7-2.9 2.1-3 3.8H20v7h-6v-5.5Z",
+    calendar: "M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm12 8H5v9h14v-9Z"
   };
 
   const P = S.person;
@@ -65,6 +67,12 @@
     social(P.links.linkedin, "LinkedIn", ICONS.linkedin),
     social(P.links.cv, "CV", ICONS.cv)
   );
+  const nextEvent = S.activities.filter((a) => ymKey(a.date) > nowKey).sort((a, b) => ymKey(a.date) - ymKey(b.date))[0];
+  if (nextEvent) {
+    const nu = $("#next-up");
+    nu.hidden = false;
+    nu.append(icon(ICONS.calendar), h("span", { class: "next-label" }, "Next up"), `${nextEvent.title}, ${nextEvent.place} · ${fmtMonth(nextEvent.date)}`);
+  }
 
   // ---------- news & about ----------
   $("#news").append(...S.news.map((n) =>
@@ -237,7 +245,25 @@
   function restore() { highlight(selected); render(selected); }
   function select(state) { selected = state; restore(); }
   map.addEventListener("click", (e) => { if (e.target === map) select(null); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && selected && !$("#cite-dialog").open) select(null);
+  });
   panelDefault();
+
+  // Entrance: topics grow, edges draw, papers pop in, the first time the map is seen.
+  if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    map.querySelectorAll(".m-edge").forEach((l) => l.style.setProperty("--len", `${Math.ceil(l.getTotalLength())}`));
+    map.querySelectorAll(".m-topic").forEach((g, i) => g.style.setProperty("--d", `${i * 0.12}s`));
+    map.querySelectorAll(".m-paper .bubble").forEach((b, i) => b.style.setProperty("--d", `${0.75 + i * 0.07}s`));
+    map.classList.add("pre");
+    const mio = new IntersectionObserver((entries) => {
+      if (!entries.some((en) => en.isIntersecting)) return;
+      mio.disconnect();
+      map.classList.add("play");
+      setTimeout(() => map.classList.remove("pre", "play"), 2200);
+    }, { threshold: 0.3 });
+    mio.observe(map);
+  }
 
   // ---------- publications ----------
   const pubFilters = [
@@ -269,19 +295,80 @@
           h("p", { class: "authors" }, authorLine(p)),
           h("div", { class: "meta" }, h("span", { class: "venue" }, `${p.venue} · ${fmtMonth(p.date)}`), tagsFor(p)),
           h("div", { class: "links" }, ...linkButtons(p),
-            p.map ? h("button", { class: "link-btn", type: "button", onclick: () => { select({ paper: p.id }); $("#research").scrollIntoView(); } }, icon(ICONS.target), "On the map") : null),
+            p.map ? h("button", { class: "link-btn", type: "button", onclick: () => { select({ paper: p.id }); $("#research").scrollIntoView(); } }, icon(ICONS.target), "On the map") : null,
+            h("button", { class: "link-btn", type: "button", onclick: () => openCite(p.id) }, icon(ICONS.quote), "Cite")),
           h("details", {}, h("summary", {}, "Abstract"), h("p", {}, p.abstract))))
     ));
     if (!items.length) pubList.append(h("li", { class: "pubs-empty" }, "Nothing here yet."));
   }
-  function focusPub(id) {
+  function focusPub(id, instant = false) {
     if (!pubFilters.find((f) => f.key === pubFilter).test(pubById[id])) setPubFilter("all");
     const card = document.getElementById(`pub-${id}`);
-    card.scrollIntoView({ block: "center" });
+    card.scrollIntoView({ block: "center", behavior: instant ? "instant" : "smooth" });
     card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
     setTimeout(() => card.classList.remove("flash"), 1800);
+    history.replaceState(null, "", `#pub-${id}`);
   }
   renderPubs();
+
+  // ---------- citations ----------
+  const TEX = {
+    "ç": "{\\c{c}}", "č": "{\\v{c}}", "ě": "{\\v{e}}", "ř": "{\\v{r}}", "š": "{\\v{s}}", "Š": "{\\v{S}}", "ž": "{\\v{z}}",
+    "á": "{\\'a}", "é": "{\\'e}", "í": "{\\'i}", "ó": "{\\'o}", "ú": "{\\'u}", "è": "{\\`e}", "à": "{\\`a}",
+    "ä": "{\\\"a}", "ö": "{\\\"o}", "ü": "{\\\"u}", "ñ": "{\\~n}", "ł": "{\\l}"
+  };
+  const tex = (str) => str.replace(/[^\x00-\x7F]/g, (c) => TEX[c] || c);
+  const ascii = (str) => str.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l");
+  // Compound surnames that the "last word is the surname" rule would get wrong.
+  const SURNAMES = { "Llorenç Balada Gaggioli": ["Balada Gaggioli", "Llorenç"] };
+  const splitName = (n) => SURNAMES[n] || [n.split(" ").slice(-1)[0], n.split(" ").slice(0, -1).join(" ")];
+  const STOP = new Set(["a", "an", "the", "of", "on", "and", "for", "via", "with", "in"]);
+  function bibtex(p) {
+    const [last] = splitName(p.authors[0]);
+    const year = p.date.slice(0, 4);
+    const word = p.title.split(/\s+/).find((w) => !STOP.has(w.toLowerCase())) || "paper";
+    const key = ascii(last).toLowerCase().replace(/[^a-z]/g, "") + year + ascii(word).toLowerCase().replace(/[^a-z]/g, "");
+    // Brace words with capitals (after the first) so bibliography styles keep their case.
+    const title = p.title.split(" ").map((w, i) => (i && /[A-Z]/.test(w) ? `{${tex(w)}}` : tex(w))).join(" ");
+    const authors = p.authors.map((a) => { const [l, f] = splitName(a); return tex(f ? `${l}, ${f}` : l); }).join(" and ");
+    const arxiv = p.links.arxiv && p.links.arxiv.match(/abs\/(.+)$/);
+    const fields = p.cite
+      ? [["title", title], ["author", authors], ["journal", p.cite.journal], ["volume", p.cite.volume], ["pages", p.cite.number], ["year", year], ["doi", p.cite.doi]]
+      : [["title", title], ["author", authors], ["year", year], ...(arxiv ? [["eprint", arxiv[1]], ["archivePrefix", "arXiv"], ["url", p.links.arxiv]] : [])];
+    const pad = Math.max(...fields.map(([k]) => k.length));
+    return `@${p.cite ? "article" : "misc"}{${key},\n${fields.map(([k, v]) => `  ${k.padEnd(pad)} = {${v}}`).join(",\n")}\n}`;
+  }
+  const citeDialog = $("#cite-dialog");
+  let citing = null;
+  async function copyText(text, btn, done) {
+    try { await navigator.clipboard.writeText(text); }
+    catch (e) {
+      const r = document.createRange(); r.selectNodeContents($("#cite-bib"));
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); document.execCommand("copy");
+    }
+    const old = btn.textContent; btn.textContent = done;
+    setTimeout(() => { btn.textContent = old; }, 1600);
+  }
+  function openCite(id) {
+    citing = pubById[id];
+    $("#cite-paper").textContent = citing.title;
+    $("#cite-bib").textContent = bibtex(citing);
+    citeDialog.showModal();
+  }
+  $("#cite-copy").addEventListener("click", (e) => copyText($("#cite-bib").textContent, e.currentTarget, "Copied ✓"));
+  $("#cite-link").addEventListener("click", (e) => copyText(`${location.origin}${location.pathname}#pub-${citing.id}`, e.currentTarget, "Link copied ✓"));
+  citeDialog.addEventListener("click", (e) => { if (e.target === citeDialog) citeDialog.close(); });
+
+  // ---------- code ----------
+  const LANG_COLOR = { "Julia": "#9558b2", "Jupyter Notebook": "#da5b0b", "Python": "#3572a5" };
+  $("#repos").append(...S.software.map((r) =>
+    h("li", { class: "repo card" },
+      h("a", { class: "repo-name", href: r.url, target: "_blank", rel: "noopener" }, icon(ICONS.github), h("span", {}, r.name), icon(ICONS.arrow)),
+      h("p", {}, r.description),
+      h("div", { class: "repo-foot" },
+        h("span", { class: "lang" }, h("span", { class: "lang-dot", style: `background:${LANG_COLOR[r.language] || "var(--ink-faint)"}` }), r.language),
+        r.paper ? h("a", { class: "repo-paper", href: `#pub-${r.paper}`, onclick: (e) => { e.preventDefault(); focusPub(r.paper); } }, `Paper: ${r.paper} →`) : null))
+  ));
 
   // ---------- activities ----------
   const KIND = { conference: "Conference", workshop: "Workshop", school: "School", visit: "Research visit", course: "Course" };
@@ -320,6 +407,14 @@
     ));
   }
   renderActs();
+  $("#next-up").addEventListener("click", () => {
+    const chip = actBar.querySelector('[data-key="upcoming"]');
+    if (chip) chip.click();
+  });
+
+  // Shared links like /#pub-UGS open with that paper highlighted.
+  const deep = location.hash.match(/^#pub-(.+)$/);
+  if (deep && pubById[deep[1]]) setTimeout(() => focusPub(deep[1], true), 300);
 
   // ---------- CV ----------
   $("#cv-link").href = P.links.cv;
@@ -390,7 +485,7 @@
   syncTheme();
 
   if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    const els = document.querySelectorAll(".section-head, .map-wrap, .intro-grid > *, .pub, .act-year, .tl");
+    const els = document.querySelectorAll(".section-head, .map-wrap, .intro-grid > *, .pub, .repo, .act-year, .tl");
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
     }, { rootMargin: "0px 0px -8% 0px" });

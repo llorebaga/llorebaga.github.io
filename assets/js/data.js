@@ -110,6 +110,7 @@ window.SITE = {
       topics: ["qc"],
       map: [672, 58],
       links: { journal: "https://journals.aps.org/prresearch/abstract/10.1103/y8nw-n1wb", code: "https://github.com/llorebaga/RandomSE" },
+      cite: { journal: "Physical Review Research", volume: "8", number: "013150", doi: "10.1103/y8nw-n1wb" },
       abstract: "We introduce the random Schrödinger equation, with a noise term given by a random Hermitian matrix as a means to model noisy quantum systems. We derive bounds on the error of the synthesised unitary in terms of bounds on the norm of the noise, and show that for certain noise processes these bounds are tight. We then show that in certain situations, minimising the error is equivalent to finding a geodesic on SU(n) with respect to a Riemannian metric encoding the coupling between the control pulse and the noise process. Our work thus extends the series of seminal papers by Nielsen et al. on the geometry of quantum gate complexity."
     },
     {
@@ -123,6 +124,7 @@ window.SITE = {
       topics: ["qc", "lr"],
       map: [745, 350],
       links: { journal: "https://journals.aps.org/pra/abstract/10.1103/9mfk-gg3x", code: "https://github.com/llorebaga/QCMPO" },
+      cite: { journal: "Physical Review A", volume: "112", number: "062612", doi: "10.1103/9mfk-gg3x" },
       abstract: "We present a method for describing the time evolution of many-body controlled quantum systems using matrix product operators (MPOs). Existing techniques for solving the time-dependent Schrödinger equation (TDSE) with an MPO Hamiltonian often rely on time discretization. In contrast, our approach uses the Magnus expansion and Chebyshev polynomials to model the time evolution, and the MPO representation to efficiently encode the system's dynamics. This results in a scalable method that can be used efficiently for many-body controlled quantum systems. We apply this technique to quantum optimal control, specifically for a gate synthesis problem, demonstrating that it can be used for large-scale optimization problems that are otherwise impractical to formulate in a dense matrix representation."
     },
     {
@@ -149,6 +151,7 @@ window.SITE = {
       topics: ["qc", "po"],
       map: [340, 288],
       links: { journal: "https://journals.aps.org/prresearch/abstract/10.1103/g4fb-xm13" },
+      cite: { journal: "Physical Review Research", volume: "7", number: "043202", doi: "10.1103/g4fb-xm13" },
       abstract: "Optimization of constrained quantum control problems powers quantum technologies. This task becomes very difficult when these control problems are nonconvex and plagued with dense local extrema. For such problems, current optimization methods must be repeated many times to find good solutions, each time requiring many simulations of the system. Here, we present quantum control via polynomial optimization (QCPOP), a method that eliminates this problem by directly finding globally optimal solutions. The resulting increase in speed, which can be a thousandfold or more, makes it possible to solve problems that were previously intractable. This remarkable advance is due to global optimization methods recently developed for polynomial functions. We demonstrate the power of this method by showing that it obtains an optimal solution in a single run for a problem in which local extrema are so dense that gradient methods require thousands of runs to reach a similar fidelity. Since QCPOP is able to find the global optimum for quantum control, we expect that it will not only enhance the utility of quantum control by making it much easier to find the necessary protocols, but also provide a key tool for understanding the precise limits of quantum technologies. Finally, we note that the ability to cast quantum control as polynomial optimization resolves an open question regarding the computability of exact solutions to quantum control problems."
     },
     {
@@ -174,8 +177,19 @@ window.SITE = {
       firstAuthor: false,
       topics: [],
       links: { journal: "https://doi.org/10.1063/5.0210971" },
+      cite: { journal: "The Journal of Chemical Physics", volume: "160", number: "234106", doi: "10.1063/5.0210971" },
       abstract: "Basis sets consisting of functions that form linearly independent products (LIPs) have remarkable applications in quantum chemistry but are scarce because of mathematical limitations. We show how to linearly transform a given set of basis functions to maximize the linear independence of their products by maximizing the determinant of the appropriate Gram matrix. The proposed method enhances the utility of the LIP basis set technology and clarifies why canonical molecular orbitals form LIPs more readily than atomic orbitals. The same approach can also be used to orthogonalize basis functions themselves, which means that various orthogonalization techniques may be viewed as special cases of a certain nonlinear optimization problem."
     }
+  ],
+
+  // Public code. paper: id from `publications` the repo accompanies.
+  software: [
+    { name: "LRPOP", url: "https://github.com/llorebaga/LRPOP", language: "Julia", paper: "LRPOP", description: "Global optimization of low-rank polynomials: SDP relaxations whose size scales with the CP rank instead of the number of variables." },
+    { name: "SLPOP", url: "https://github.com/llorebaga/SLPOP", language: "Julia", paper: "ComPOP", description: "Moment-SOS hierarchies for polynomial optimization problems with composition or tensor train structure." },
+    { name: "LR_2qubit", url: "https://github.com/llorebaga/LR_2qubit", language: "Julia", paper: "LR2Q", description: "Determinantal geometry of two-qubit gates: low-rank distances in the Weyl chamber." },
+    { name: "UGS", url: "https://github.com/llorebaga/UGS", language: "Jupyter Notebook", paper: "UGS", description: "Global quantum optimal control via polynomial optimization: unitary gate synthesis with a certificate of globality." },
+    { name: "QCMPO", url: "https://github.com/llorebaga/QCMPO", language: "Jupyter Notebook", paper: "TEMPO", description: "Matrix product operators for time evolution and optimal control of many-body quantum systems." },
+    { name: "RandomSE", url: "https://github.com/llorebaga/RandomSE", language: "Jupyter Notebook", paper: "RSE", description: "Numerical study of the random Schrödinger equation for modelling noisy quantum control." }
   ],
 
   /*

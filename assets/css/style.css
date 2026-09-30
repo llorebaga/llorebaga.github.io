@@ -451,3 +451,74 @@ address { font-style: normal; color: var(--ink-soft); margin-top: 12px; font-siz
 /* Entrance animation */
 .reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
 .reveal.in { opacity: 1; transform: none; }
+
+/* ------------------------------------------------------------------
+   Next up (hero)
+------------------------------------------------------------------ */
+.next-up {
+  display: inline-flex; align-items: center; gap: 10px; margin-top: 22px;
+  font-size: 14px; color: var(--ink-soft) !important; text-decoration: none;
+}
+.next-up[hidden] { display: none; }
+.next-up svg { width: 16px; height: 16px; fill: var(--accent-ink); flex: none; }
+.next-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; background: var(--blue-tint); color: var(--accent-ink);
+}
+.next-up:hover { color: var(--ink) !important; }
+
+/* ------------------------------------------------------------------
+   Code
+------------------------------------------------------------------ */
+.repos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.repo { display: flex; flex-direction: column; padding: 20px 22px; transition: border-color .15s, transform .15s; }
+.repo:hover { border-color: var(--cluster-stroke); transform: translateY(-2px); }
+.repo-name { display: flex; align-items: center; gap: 9px; font: 600 17px var(--sans); color: var(--ink) !important; text-decoration: none; }
+.repo-name svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
+.repo-name svg:last-child { width: 14px; height: 14px; margin-left: auto; color: var(--ink-faint); transition: transform .15s, color .15s; }
+.repo-name:hover svg:last-child { color: var(--accent-ink); transform: translate(2px, -2px); }
+.repo-name::after { content: ""; position: absolute; inset: 0; } /* whole card clickable */
+.repo { position: relative; }
+.repo p { margin: 10px 0 16px; font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+.repo-foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; color: var(--ink-faint); }
+.lang { display: inline-flex; align-items: center; gap: 6px; }
+.lang-dot { width: 10px; height: 10px; border-radius: 50%; }
+.repo-paper { position: relative; z-index: 1; font-weight: 600; text-decoration: none; }
+.repo-paper:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------------
+   Cite dialog
+------------------------------------------------------------------ */
+.cite-dialog {
+  width: min(640px, calc(100% - 32px)); padding: 0; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); color: var(--ink); box-shadow: 0 24px 64px rgba(0, 0, 0, .25);
+}
+.cite-dialog::backdrop { background: rgba(17, 23, 28, .45); backdrop-filter: blur(3px); }
+.cite-dialog[open] { animation: pop .18s ease-out; }
+@keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+.cite-inner { padding: 22px 24px 24px; }
+.cite-head { display: flex; justify-content: space-between; align-items: center; }
+.cite-head h2 { font-size: 22px; }
+.cite-close { border: 0; background: none; font-size: 26px; line-height: 1; color: var(--ink-faint); cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+.cite-close:hover { color: var(--ink); background: var(--surface-2); }
+.cite-paper { margin: 6px 0 14px; font-size: 14px; color: var(--ink-soft); }
+.cite-bib {
+  margin: 0 0 16px; padding: 14px 16px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line);
+  font: 13px/1.6 ui-monospace, "Cascadia Code", Consolas, monospace; color: var(--ink); overflow-x: auto; white-space: pre;
+}
+.cite-inner .btn { border: 0; cursor: pointer; font-family: var(--sans); }
+.cite-inner .link-btn { height: 42px; padding: 0 16px; cursor: pointer; font-family: var(--sans); font-size: 14px; }
+.link-btn { font-family: var(--sans); cursor: pointer; }
+
+/* ------------------------------------------------------------------
+   Map entrance
+------------------------------------------------------------------ */
+#map.pre .m-topic, #map.pre .m-cluster, #map.pre .m-edge, #map.pre .m-paper .bubble { opacity: 0; }
+#map.play .m-topic, #map.play .m-cluster, #map.play .m-edge, #map.play .m-paper .bubble { opacity: 1; }
+#map.play .m-topic { transform-box: fill-box; transform-origin: center; animation: grow .6s cubic-bezier(.2, .9, .3, 1.2) var(--d, 0s) backwards; }
+#map.play .m-cluster { animation: fade .5s ease .4s backwards; }
+#map.play .m-edge { stroke-dasharray: var(--len); animation: draw .5s ease-out .45s backwards; }
+#map.play .m-paper .bubble { animation: grow .45s cubic-bezier(.2, .9, .3, 1.4) var(--d, .8s) backwards; }
+@keyframes grow { from { opacity: 0; transform: scale(.4); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes draw { from { stroke-dashoffset: var(--len); } }

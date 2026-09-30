@@ -58,6 +58,7 @@
       <ul id="nav-links" class="nav-links">
         <li><a href="#research">Research</a></li>
         <li><a href="#publications">Publications</a></li>
+        <li><a href="#code">Code</a></li>
         <li><a href="#activities">Activities</a></li>
         <li><a href="#cv">CV</a></li>
         <li><a href="#contact">Contact</a></li>
@@ -83,6 +84,7 @@
         <p class="tagline" id="tagline"></p>
         <ul class="affiliations" id="affiliations"></ul>
         <div class="socials" id="socials"></div>
+        <a class="next-up" id="next-up" href="#activities" hidden></a>
       </div>
     </section>
 
@@ -127,6 +129,16 @@
       </header>
       <div class="filters" id="pub-filters" role="toolbar" aria-label="Filter publications"></div>
       <ol class="pubs" id="pubs"></ol>
+    </section>
+
+    <!-- Code -->
+    <section id="code" class="section container">
+      <header class="section-head">
+        <p class="kicker">Code</p>
+        <h2 class="section-title">Software &amp; reproducible research</h2>
+        <p class="lead">Most papers come with open-source code, so every result can be reproduced.</p>
+      </header>
+      <ul class="repos" id="repos"></ul>
     </section>
 
     <!-- Activities -->
@@ -175,6 +187,21 @@
       <a href="#top">Back to top ↑</a>
     </div>
   </footer>
+
+  <dialog class="cite-dialog" id="cite-dialog" aria-labelledby="cite-title">
+    <form method="dialog" class="cite-inner">
+      <header class="cite-head">
+        <h2 id="cite-title">Cite this paper</h2>
+        <button class="cite-close" value="close" aria-label="Close">×</button>
+      </header>
+      <p class="cite-paper" id="cite-paper"></p>
+      <pre class="cite-bib" id="cite-bib" tabindex="0"></pre>
+      <div class="links">
+        <button type="button" class="btn" id="cite-copy">Copy BibTeX</button>
+        <button type="button" class="link-btn" id="cite-link">Copy link to paper</button>
+      </div>
+    </form>
+  </dialog>
 
   <noscript><p class="container">This site needs JavaScript to show its content. Email: llorenc.balada.gaggioli@fel.cvut.cz</p></noscript>
 

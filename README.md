@@ -13,7 +13,8 @@ Everything you'd want to edit lives in **[`assets/js/data.js`](assets/js/data.js
 | Name, role, links, email, address | `person` |
 | News items on the front page | `news` (link one to a paper with `paper: "ID"`) |
 | About / research text | `about`, `research` |
-| Papers | `publications` (newest first) |
+| Papers | `publications` (newest first; published ones also get a `cite` block for BibTeX) |
+| Code cards | `software` (link each repo to its paper with `paper: "ID"`) |
 | Talks, conferences, schools, visits | `activities` |
 | CV timeline | `cv` |
 
@@ -33,6 +34,7 @@ Add an object to `publications`:
   topics: ["qc", "lr"],             // qc = Quantum Control, po = Polynomial Optimization, lr = Low-rank Structure
   map: [760, 300],                  // bubble position in the research map (omit to keep it off the map)
   links: { arxiv: "…", journal: "…", code: "…" },
+  cite: { journal: "Physical Review A", volume: "112", number: "062612", doi: "…" }, // published papers only
   abstract: "…"
 }
 ```
@@ -66,4 +68,5 @@ assets/css/style.css  styles (light + dark theme)
 assets/js/data.js     all content
 assets/js/main.js     rendering, research map, filters
 assets/img/           photo and favicon
+404.html              "page not found" page
 ```
