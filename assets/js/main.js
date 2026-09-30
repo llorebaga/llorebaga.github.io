@@ -65,13 +65,6 @@
     social(P.links.linkedin, "LinkedIn", ICONS.linkedin),
     social(P.links.cv, "CV", ICONS.cv)
   );
-  const talks = S.activities.filter((a) => a.role === "talk" && ymKey(a.date) <= nowKey).length;
-  const stats = [
-    [S.publications.length, "Papers"],
-    [S.publications.filter((p) => p.firstAuthor).length, "First-author"],
-    [talks, "Talks given"]
-  ];
-  $("#stats").append(...stats.map(([n, l]) => h("div", {}, h("dt", {}, l), h("dd", {}, String(n)))));
 
   // ---------- news & about ----------
   $("#news").append(...S.news.map((n) =>

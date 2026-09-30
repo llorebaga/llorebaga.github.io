@@ -198,17 +198,12 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.2; marg
 .social svg { width: 17px; height: 17px; fill: currentColor; flex: none; }
 .social.primary { background: var(--blue-dark); border-color: var(--blue-dark); color: #fff !important; }
 .social.primary:hover { background: var(--blue); }
-.stats { display: flex; gap: 32px; margin: 28px 0 0; padding: 0; }
-.stats div { display: flex; flex-direction: column-reverse; }
-.stats dt { font-size: 13px; color: var(--ink-faint); }
-.stats dd { margin: 0; font-family: var(--serif); font-size: 28px; line-height: 1.1; }
 
 @media (max-width: 760px) {
   .hero { grid-template-columns: 1fr; gap: 32px; padding: 36px 0 24px; text-align: left; }
   .hero-photo { width: 180px; }
   .hero-photo::before { inset: 12px -12px -12px 12px; border-radius: 22px; }
   .tagline { font-size: 17px; }
-  .stats { gap: 24px; }
 }
 
 /* ------------------------------------------------------------------
