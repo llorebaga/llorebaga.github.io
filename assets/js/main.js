@@ -1,8 +1,11 @@
 (function () {
   "use strict";
   const S = window.SITE;
+  const I18N = window.I18N;
+  const T = I18N.t, tr = I18N.tr; // T: interface label, tr: bilingual content from data.js
   const $ = (sel, root = document) => root.querySelector(sel);
-  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const MONTHS = T("months").split(" ");
+  I18N.apply();
   const SVGNS = "http://www.w3.org/2000/svg";
 
   // ---------- helpers ----------
@@ -52,15 +55,15 @@
   // ---------- hero ----------
   $("#photo").src = P.photo;
   $("#name").textContent = P.name;
-  $("#role").textContent = P.role;
-  $("#tagline").textContent = P.tagline;
+  $("#role").textContent = tr(P.role);
+  $("#tagline").textContent = tr(P.tagline);
   $("#affiliations").append(...P.affiliations.map((a) =>
-    h("li", {}, h("a", { href: a.url, target: "_blank", rel: "noopener" }, a.name, h("span", {}, a.detail)))
+    h("li", {}, h("a", { href: a.url, target: "_blank", rel: "noopener" }, a.name, h("span", {}, tr(a.detail))))
   ));
   const social = (href, label, path, cls = "") =>
     h("a", { class: `social ${cls}`, href, target: href.startsWith("mailto:") ? null : "_blank", rel: "noopener" }, icon(path), label);
   $("#socials").append(
-    social(`mailto:${P.email}`, "Email", ICONS.mail, "primary"),
+    social(`mailto:${P.email}`, T("social.email"), ICONS.mail, "primary"),
     social(P.links.scholar, "Scholar", ICONS.scholar),
     social(P.links.github, "GitHub", ICONS.github),
     social(P.links.linkedin, "LinkedIn", ICONS.linkedin),
@@ -72,12 +75,12 @@
     h("li", {},
       h("span", { class: "news-date" }, fmtMonth(n.date)),
       h("p", {},
-        h("span", { html: n.text }),
-        n.paper ? h("a", { class: "paper-link", href: `#pub-${n.paper}`, onclick: (e) => { e.preventDefault(); focusPub(n.paper); } }, "Read →") : null)
+        h("span", { html: tr(n.text) }),
+        n.paper ? h("a", { class: "paper-link", href: `#pub-${n.paper}`, onclick: (e) => { e.preventDefault(); focusPub(n.paper); } }, T("news.read")) : null)
     )
   ));
-  $("#about").append(...S.about.map((t) => h("p", { html: t })));
-  $("#research-text").innerHTML = S.research;
+  $("#about").append(...tr(S.about).map((t) => h("p", { html: t })));
+  $("#research-text").innerHTML = tr(S.research);
 
   // ---------- research map ----------
   // Geometry follows the original hand-made map.
@@ -104,10 +107,10 @@
     }
   }
   for (const [key, [cx, cy]] of Object.entries(TOPIC_POS)) {
-    const words = S.topics[key].name.split(" ");
+    const words = tr(S.topics[key].mapLabel) || tr(S.topics[key].name).split(" ");
     const text = s("text", { x: cx, y: cy - (words.length - 1) * 15 + 7 },
       ...words.map((w, i) => s("tspan", { x: cx, dy: i ? 30 : 0 }, w)));
-    const g = reg(s("g", { class: "m-topic", tabindex: 0, role: "button", "aria-label": `${S.topics[key].name}: show related papers`, "data-topic": key },
+    const g = reg(s("g", { class: "m-topic", tabindex: 0, role: "button", "aria-label": T("map.topicAria", { name: tr(S.topics[key].name) }), "data-topic": key },
       s("circle", { cx, cy, r: 100 }), text), [`t:${key}`]);
     g.addEventListener("mouseenter", () => preview({ topic: key }));
     g.addEventListener("mouseleave", restore);
@@ -133,7 +136,7 @@
     }
     const g = reg(s("g", {
       class: `m-paper ${p.status}${p.firstAuthor ? " first" : ""}`, tabindex: 0, role: "button",
-      "aria-label": `${p.id}: ${p.title} (${p.status}${p.firstAuthor ? ", first author" : ""})`, "data-id": p.id
+      "aria-label": `${p.id}: ${p.title} (${T(`tag.${p.status}`)}${p.firstAuthor ? `, ${T("tag.first")}` : ""})`, "data-id": p.id
     }, s("g", { class: "bubble" }, s("circle", { cx, cy, r: 34 }), s("text", { x: cx, y: cy }, p.id))), keys);
     g.addEventListener("mouseenter", () => preview({ paper: p.id }));
     g.addEventListener("mouseleave", restore);
@@ -175,16 +178,16 @@
   const panel = $("#map-panel");
   function tagsFor(p) {
     return [
-      h("span", { class: `tag ${p.status}` }, p.status === "published" ? "Published" : "Preprint"),
-      p.firstAuthor ? h("span", { class: "tag" }, "First author") : null,
-      ...p.topics.map((t) => h("span", { class: "tag topic" }, S.topics[t].name))
+      h("span", { class: `tag ${p.status}` }, T(`tag.${p.status}`)),
+      p.firstAuthor ? h("span", { class: "tag" }, T("tag.first")) : null,
+      ...p.topics.map((t) => h("span", { class: "tag topic" }, tr(S.topics[t].name)))
     ];
   }
   function linkButtons(p) {
     const out = [];
-    if (p.links.journal) out.push(h("a", { class: "link-btn", href: p.links.journal, target: "_blank", rel: "noopener" }, icon(ICONS.doc), "Journal"));
+    if (p.links.journal) out.push(h("a", { class: "link-btn", href: p.links.journal, target: "_blank", rel: "noopener" }, icon(ICONS.doc), T("pubs.journal")));
     if (p.links.arxiv) out.push(h("a", { class: "link-btn", href: p.links.arxiv, target: "_blank", rel: "noopener" }, icon(ICONS.doc), "arXiv"));
-    if (p.links.code) out.push(h("a", { class: "link-btn", href: p.links.code, target: "_blank", rel: "noopener" }, icon(ICONS.github), "Code"));
+    if (p.links.code) out.push(h("a", { class: "link-btn", href: p.links.code, target: "_blank", rel: "noopener" }, icon(ICONS.github), T("pubs.code")));
     return out;
   }
   const authorLine = (p) => p.authors.map((a, i) => [i ? ", " : "", byMe(a) ? h("strong", {}, a) : a]);
@@ -192,43 +195,43 @@
 
   function panelDefault() {
     panel.replaceChildren(
-      h("p", { class: "panel-hint" }, icon(ICONS.cursor), "Hover a bubble to preview, click to pin it here. Papers sit between the topics they connect."),
+      h("p", { class: "panel-hint" }, icon(ICONS.cursor), T("map.hint")),
       h("ul", { class: "panel-topics" }, ...topicKeys.map((k) => {
         const n = S.publications.filter((p) => p.map && p.topics.includes(k)).length;
         return h("li", {}, h("button", { type: "button", onclick: () => select({ topic: k }), onmouseenter: () => highlight({ topic: k }), onmouseleave: () => highlight(selected) },
-          h("h3", {}, S.topics[k].name),
-          h("p", {}, S.topics[k].blurb),
-          h("p", { class: "count" }, `${n} papers →`)));
+          h("h3", {}, tr(S.topics[k].name)),
+          h("p", {}, tr(S.topics[k].blurb)),
+          h("p", { class: "count" }, T("map.papers", { n }))));
       }))
     );
   }
   function panelPaper(p) {
     panel.replaceChildren(
-      h("button", { class: "panel-back", type: "button", onclick: () => select(null) }, "← All topics"),
+      h("button", { class: "panel-back", type: "button", onclick: () => select(null) }, T("map.back")),
       h("div", { class: "panel-paper" },
         h("div", { class: "tagrow" }, tagsFor(p)),
         h("h3", {}, p.title),
         h("p", { class: "authors" }, authorLine(p)),
-        h("p", { class: "venue" }, `${p.venue} · ${fmtMonth(p.date)}`),
-        h("p", { class: "snippet" }, snippet(p.abstract))),
+        h("p", { class: "venue" }, `${tr(p.venue)} · ${fmtMonth(p.date)}`),
+        h("p", { class: "snippet", lang: "en" }, snippet(p.abstract))),
       h("div", { class: "links" }, ...linkButtons(p),
-        h("a", { class: "link-btn", href: `#pub-${p.id}`, onclick: (e) => { e.preventDefault(); focusPub(p.id); } }, icon(ICONS.arrow), "In the list"))
+        h("a", { class: "link-btn", href: `#pub-${p.id}`, onclick: (e) => { e.preventDefault(); focusPub(p.id); } }, icon(ICONS.arrow), T("map.inList")))
     );
   }
   function panelTopic(k) {
     const papers = S.publications.filter((p) => p.map && p.topics.includes(k));
     panel.replaceChildren(
-      h("button", { class: "panel-back", type: "button", onclick: () => select(null) }, "← All topics"),
+      h("button", { class: "panel-back", type: "button", onclick: () => select(null) }, T("map.back")),
       h("div", { class: "panel-paper" },
-        h("p", { class: "kicker" }, "Topic"),
-        h("h3", {}, S.topics[k].name),
-        h("p", { class: "snippet", style: "margin-top:10px" }, S.topics[k].blurb)),
+        h("p", { class: "kicker" }, T("map.topic")),
+        h("h3", {}, tr(S.topics[k].name)),
+        h("p", { class: "snippet", style: "margin-top:10px" }, tr(S.topics[k].blurb))),
       h("ul", { class: "panel-topics", style: "gap:4px;margin-bottom:16px" }, ...papers.map((p) =>
         h("li", {}, h("button", { type: "button", onclick: () => select({ paper: p.id }), onmouseenter: () => highlight({ paper: p.id }), onmouseleave: () => highlight(selected) },
           h("p", { style: "margin:0;font-size:14px" }, h("strong", {}, p.id), " · ", p.title))))),
       h("div", { class: "links" },
-        window.SITE.explainers && window.SITE.explainers[k] ? h("a", { class: "link-btn", href: "#explained", onclick: (e) => { e.preventDefault(); if (window.Explainer) window.Explainer.open(k); } }, icon(ICONS.cursor), "Explain it simply") : null,
-        h("a", { class: "link-btn", href: "#publications", onclick: (e) => { e.preventDefault(); setPubFilter(k); $("#publications").scrollIntoView(); } }, icon(ICONS.arrow), "Filter publications"))
+        window.SITE.explainers && window.SITE.explainers[k] ? h("a", { class: "link-btn", href: "#explained", onclick: (e) => { e.preventDefault(); if (window.Explainer) window.Explainer.open(k); } }, icon(ICONS.cursor), T("map.explain")) : null,
+        h("a", { class: "link-btn", href: "#publications", onclick: (e) => { e.preventDefault(); setPubFilter(k); $("#publications").scrollIntoView(); } }, icon(ICONS.arrow), T("map.filter")))
     );
   }
   function render(state) {
@@ -262,10 +265,10 @@
 
   // ---------- publications ----------
   const pubFilters = [
-    { key: "all", label: "All", test: () => true },
-    ...topicKeys.map((k) => ({ key: k, label: S.topics[k].name, test: (p) => p.topics.includes(k) })),
-    { key: "first", label: "First author", test: (p) => p.firstAuthor },
-    { key: "published", label: "Published", test: (p) => p.status === "published" }
+    { key: "all", label: T("pubs.all"), test: () => true },
+    ...topicKeys.map((k) => ({ key: k, label: tr(S.topics[k].name), test: (p) => p.topics.includes(k) })),
+    { key: "first", label: T("pubs.first"), test: (p) => p.firstAuthor },
+    { key: "published", label: T("pubs.published"), test: (p) => p.status === "published" }
   ];
   let pubFilter = "all";
   const pubList = $("#pubs");
@@ -288,13 +291,13 @@
         h("div", {},
           h("h3", {}, p.title),
           h("p", { class: "authors" }, authorLine(p)),
-          h("div", { class: "meta" }, h("span", { class: "venue" }, `${p.venue} · ${fmtMonth(p.date)}`), tagsFor(p)),
+          h("div", { class: "meta" }, h("span", { class: "venue" }, `${tr(p.venue)} · ${fmtMonth(p.date)}`), tagsFor(p)),
           h("div", { class: "links" }, ...linkButtons(p),
-            p.map ? h("button", { class: "link-btn", type: "button", onclick: () => { select({ paper: p.id }); $("#research").scrollIntoView(); } }, icon(ICONS.target), "On the map") : null,
-            h("button", { class: "link-btn", type: "button", onclick: () => openCite(p.id) }, icon(ICONS.quote), "Cite")),
-          h("details", {}, h("summary", {}, "Abstract"), h("p", {}, p.abstract))))
+            p.map ? h("button", { class: "link-btn", type: "button", onclick: () => { select({ paper: p.id }); $("#research").scrollIntoView(); } }, icon(ICONS.target), T("pubs.onMap")) : null,
+            h("button", { class: "link-btn", type: "button", onclick: () => openCite(p.id) }, icon(ICONS.quote), T("pubs.cite"))),
+          h("details", {}, h("summary", {}, T("pubs.abstract")), h("p", { lang: "en" }, p.abstract))))
     ));
-    if (!items.length) pubList.append(h("li", { class: "pubs-empty" }, "Nothing here yet."));
+    if (!items.length) pubList.append(h("li", { class: "pubs-empty" }, T("pubs.empty")));
   }
   function focusPub(id, instant = false) {
     if (!pubFilters.find((f) => f.key === pubFilter).test(pubById[id])) setPubFilter("all");
@@ -350,19 +353,18 @@
     $("#cite-bib").textContent = bibtex(citing);
     citeDialog.showModal();
   }
-  $("#cite-copy").addEventListener("click", (e) => copyText($("#cite-bib").textContent, e.currentTarget, "Copied ✓"));
-  $("#cite-link").addEventListener("click", (e) => copyText(`${location.origin}${location.pathname}#pub-${citing.id}`, e.currentTarget, "Link copied ✓"));
+  $("#cite-copy").addEventListener("click", (e) => copyText($("#cite-bib").textContent, e.currentTarget, T("cite.copied")));
+  $("#cite-link").addEventListener("click", (e) => copyText(`${location.origin}${location.pathname}${I18N.lang === "en" ? "" : `?lang=${I18N.lang}`}#pub-${citing.id}`, e.currentTarget, T("cite.linkCopied")));
   citeDialog.addEventListener("click", (e) => { if (e.target === citeDialog) citeDialog.close(); });
 
   // ---------- activities ----------
-  const KIND = { conference: "Conference", workshop: "Workshop", school: "School", visit: "Research visit", course: "Course" };
   const KIND_COLOR = { conference: "var(--blue)", workshop: "var(--green)", school: "var(--yellow)", visit: "#c77d9b", course: "var(--ink-faint)" };
   const actFilters = [
-    { key: "all", label: "All", test: () => true },
-    { key: "upcoming", label: "Upcoming", test: (a) => ymKey(a.date) > nowKey },
-    { key: "talk", label: "Talks", test: (a) => a.role === "talk" },
-    { key: "poster", label: "Posters", test: (a) => a.role === "poster" },
-    ...Object.keys(KIND).map((k) => ({ key: k, label: `${KIND[k]}s`, test: (a) => a.kind === k }))
+    { key: "all", label: T("acts.all"), test: () => true },
+    { key: "upcoming", label: T("acts.upcoming"), test: (a) => ymKey(a.date) > nowKey },
+    { key: "talk", label: T("acts.talks"), test: (a) => a.role === "talk" },
+    { key: "poster", label: T("acts.posters"), test: (a) => a.role === "poster" },
+    ...Object.keys(KIND_COLOR).map((k) => ({ key: k, label: T(`kinds.${k}`), test: (a) => a.kind === k }))
   ].filter((f) => S.activities.some(f.test));
   let actFilter = "all";
   const actBar = $("#act-filters");
@@ -383,10 +385,10 @@
             h("span", { class: "act-month" }, MONTHS[parseYM(a.date).m - 1]),
             h("div", {},
               h("div", { class: "act-title" }, a.title),
-              h("div", { class: "act-place" }, h("span", { class: "kind-dot", style: `background:${KIND_COLOR[a.kind]}` }), `${KIND[a.kind]} · ${a.place}`)),
+              h("div", { class: "act-place" }, h("span", { class: "kind-dot", style: `background:${KIND_COLOR[a.kind]}` }), `${T(`kind.${a.kind}`)} · ${tr(a.place)}`)),
             h("div", { class: "act-tags" },
-              upcoming ? h("span", { class: "tag upcoming" }, "Upcoming") : null,
-              a.role ? h("span", { class: `tag ${a.role}` }, a.role === "talk" ? "Talk" : "Poster") : null));
+              upcoming ? h("span", { class: "tag upcoming" }, T("tag.upcoming")) : null,
+              a.role ? h("span", { class: `tag ${a.role}` }, T(`tag.${a.role}`)) : null));
         })))
     ));
   }
@@ -400,19 +402,19 @@
   $("#cv-link").href = P.links.cv;
   $("#timeline").append(...S.cv.map((e) =>
     h("li", { class: `tl ${e.kind}${e.end ? "" : " current"}` },
-      h("div", { class: "tl-date" }, `${fmtMonth(e.start)} – ${e.end ? fmtMonth(e.end) : "present"}`),
+      h("div", { class: "tl-date" }, `${fmtMonth(e.start)} – ${e.end ? fmtMonth(e.end) : T("cv.present")}`),
       h("div", {},
-        h("h3", {}, e.title, h("span", { class: `tag tl-kind ${e.kind}` }, e.kind === "education" ? "Education" : "Research")),
+        h("h3", {}, tr(e.title), h("span", { class: `tag tl-kind ${e.kind}` }, T(`cv.${e.kind}`))),
         h("p", {},
-          h("a", { href: e.orgUrl, target: "_blank", rel: "noopener" }, e.org),
-          e.group ? [" · ", h("a", { href: e.groupUrl, target: "_blank", rel: "noopener" }, e.group)] : null)))
+          h("a", { href: e.orgUrl, target: "_blank", rel: "noopener" }, tr(e.org)),
+          e.group ? [" · ", h("a", { href: e.groupUrl, target: "_blank", rel: "noopener" }, tr(e.group))] : null)))
   ));
 
   // ---------- footer ----------
   const mail = $("#footer-email");
   mail.href = `mailto:${P.email}`;
   mail.textContent = P.email;
-  $("#address").append(...P.address.flatMap((l, i) => (i ? [h("br"), l] : [l])));
+  $("#address").append(...tr(P.address).flatMap((l, i) => (i ? [h("br"), l] : [l])));
   $("#year").textContent = String(now.getFullYear());
   const star = (cx, cy, r) => {
     let d = "";
@@ -426,6 +428,14 @@
     const a = (i * Math.PI) / 6;
     $("#eu-stars").append(star(30 + 12 * Math.sin(a), 20 - 12 * Math.cos(a), 2.2));
   }
+
+  // ---------- language switch ----------
+  document.querySelectorAll(".lang-switch a[data-lang]").forEach((a) => {
+    const on = a.dataset.lang === I18N.lang;
+    if (on) a.setAttribute("aria-current", "true");
+    a.setAttribute("aria-label", I18N.langs[a.dataset.lang]);
+    a.addEventListener("click", (e) => { e.preventDefault(); I18N.set(a.dataset.lang); });
+  });
 
   // ---------- chrome: nav, theme, reveal ----------
   const topbar = $(".topbar");

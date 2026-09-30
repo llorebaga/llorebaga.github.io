@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/css/style.css?v=4">
+  <link rel="stylesheet" href="/assets/css/style.css?v=5">
   <script>try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
   <style>
     .nf { min-height: 100vh; display: grid; place-items: center; text-align: center; padding: 32px 16px; }
@@ -32,9 +32,25 @@
         <circle class="y" cx="175" cy="112" r="22" opacity=".35"/>
       </svg>
       <p class="kicker">Error 404</p>
-      <h1>This state is not reachable</h1>
-      <p>No control pulse leads here. The page may have moved when the site left Google Sites.</p>
-      <a class="btn" href="/">Back to the homepage</a>
+      <h1 id="nf-title">This state is not reachable</h1>
+      <p id="nf-text">No control pulse leads here. The page may have moved when the site left Google Sites.</p>
+      <a class="btn" id="nf-home" href="/">Back to the homepage</a>
+      <script>
+        (function () {
+          var saved = null;
+          try { saved = localStorage.getItem("lang"); } catch (e) {}
+          var nav = (navigator.languages || [navigator.language || ""]).map(function (l) { return String(l).slice(0, 2); });
+          var lang = saved || nav.filter(function (l) { return l === "ca" || l === "en"; })[0] || "en";
+          if (lang !== "ca") return;
+          document.documentElement.lang = "ca";
+          document.title = "Pàgina no trobada · Llorenç Balada Gaggioli";
+          document.getElementById("nf-title").textContent = "Aquest estat no és assolible";
+          document.getElementById("nf-text").textContent = "Cap pols de control no porta fins aquí. Potser la pàgina s'ha mogut quan el lloc va deixar Google Sites.";
+          var home = document.getElementById("nf-home");
+          home.textContent = "Torna a la pàgina d'inici";
+          home.href = "/?lang=ca";
+        })();
+      </script>
     </div>
   </main>
 </body>

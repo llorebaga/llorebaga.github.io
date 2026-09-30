@@ -65,6 +65,7 @@ then open <http://localhost:8000>.
 ```
 index.html            page shell and section layout
 assets/css/style.css  styles (light + dark theme)
+assets/js/i18n.js     language detection and interface labels (en, ca)
 assets/js/data.js     all content
 assets/js/main.js     rendering, research map, filters
 assets/js/explain.js  the three interactive "Research, explained" simulations
@@ -74,3 +75,14 @@ assets/img/           photo and favicon
 
 After changing CSS or JS, bump the `?v=` number on the asset links in `index.html` (and the
 stylesheet link in `404.html`) so browsers fetch the new files instead of a cached copy.
+
+## Languages (English / Català)
+
+The site is bilingual. The language comes from `?lang=en` / `?lang=ca`, then the visitor's saved
+choice, then their browser language.
+
+- **Content** in `assets/js/data.js`: any text can be a plain string (same in both languages) or
+  `{ en: "…", ca: "…" }`. A missing `ca` falls back to English. Paper titles and abstracts stay in English.
+- **Interface labels** (menus, buttons, filters, the experiments' messages) are in
+  `assets/js/i18n.js`, one dictionary per language. To add a language, add a dictionary there, add
+  translations in `data.js`, and add a link to the `.lang-switch` in `index.html`.

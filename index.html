@@ -13,15 +13,19 @@
   <meta property="og:url" content="https://llorebaga.github.io/">
   <meta name="theme-color" content="#f7f4ee" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#11171c" media="(prefers-color-scheme: dark)">
+  <link rel="alternate" hreflang="en" href="https://llorebaga.github.io/?lang=en">
+  <link rel="alternate" hreflang="ca" href="https://llorebaga.github.io/?lang=ca">
+  <link rel="alternate" hreflang="x-default" href="https://llorebaga.github.io/">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=4">
+  <link rel="stylesheet" href="assets/css/style.css?v=5">
   <script>
     // Apply the saved theme before first paint to avoid a flash.
     try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
   </script>
+  <script src="assets/js/i18n.js?v=5"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -35,6 +39,7 @@
     "email": "mailto:llorenc.balada.gaggioli@fel.cvut.cz",
     "image": "https://llorebaga.github.io/assets/img/profile.jpg",
     "url": "https://llorebaga.github.io/",
+    "knowsLanguage": ["en", "ca"],
     "sameAs": [
       "https://scholar.google.com/citations?user=3zhaXhgAAAAJ",
       "https://github.com/llorebaga",
@@ -44,30 +49,34 @@
   </script>
 </head>
 <body>
-  <a class="skip" href="#main">Skip to content</a>
+  <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
 
   <header class="topbar">
-    <nav class="nav container" aria-label="Main">
+    <nav class="nav container" data-i18n-attr="aria-label:nav.main" aria-label="Main">
       <a class="brand" href="#top">
         <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="9" r="6"/><circle cx="8" cy="22" r="6"/><circle cx="24" cy="22" r="6"/></svg>
         <span>Llorenç Balada Gaggioli</span>
       </a>
-      <button class="menu-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu">
-        <span></span><span></span><span></span>
-      </button>
       <ul id="nav-links" class="nav-links">
-        <li><a href="#research">Research</a></li>
-        <li><a href="#publications">Publications</a></li>
-        <li><a href="#activities">Activities</a></li>
-        <li><a href="#cv">CV</a></li>
-        <li><a href="#contact">Contact</a></li>
+        <li><a href="#research" data-i18n="nav.research">Research</a></li>
+        <li><a href="#publications" data-i18n="nav.publications">Publications</a></li>
+        <li><a href="#activities" data-i18n="nav.activities">Activities</a></li>
+        <li><a href="#cv" data-i18n="nav.cv">CV</a></li>
+        <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
         <li>
-          <button class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <button class="theme-toggle" type="button" data-i18n-attr="aria-label:nav.theme; title:nav.theme" aria-label="Toggle dark mode" title="Toggle dark mode">
             <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
             <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
           </button>
         </li>
       </ul>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:nav.language" aria-label="Language">
+        <a href="?lang=en" hreflang="en" lang="en" data-lang="en"><span class="long">English</span><span class="short" aria-hidden="true">EN</span></a>
+        <a href="?lang=ca" hreflang="ca" lang="ca" data-lang="ca"><span class="long">Català</span><span class="short" aria-hidden="true">CA</span></a>
+      </div>
+      <button class="menu-toggle" aria-expanded="false" aria-controls="nav-links" data-i18n-attr="aria-label:nav.menu" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
     </nav>
   </header>
 
@@ -75,7 +84,7 @@
     <!-- Hero -->
     <section id="top" class="hero container">
       <div class="hero-photo">
-        <img id="photo" alt="Portrait of Llorenç Balada Gaggioli" width="480" height="671">
+        <img id="photo" data-i18n-attr="alt:hero.photoAlt" alt="Portrait of Llorenç Balada Gaggioli" width="480" height="671">
       </div>
       <div class="hero-text">
         <p class="eyebrow" id="role"></p>
@@ -89,11 +98,11 @@
     <!-- News + About -->
     <section class="container intro-grid">
       <div class="card news">
-        <h2 class="card-title">Latest news</h2>
+        <h2 class="card-title" data-i18n="news.title">Latest news</h2>
         <ul class="news-list" id="news"></ul>
       </div>
       <div class="about">
-        <h2 class="section-title small">About me</h2>
+        <h2 class="section-title small" data-i18n="about.title">About me</h2>
         <div id="about"></div>
       </div>
     </section>
@@ -101,18 +110,18 @@
     <!-- Research map -->
     <section id="research" class="section container">
       <header class="section-head">
-        <p class="kicker">Research</p>
-        <h2 class="section-title">PhD research map</h2>
+        <p class="kicker" data-i18n="research.kicker">Research</p>
+        <h2 class="section-title" data-i18n="research.title">PhD research map</h2>
         <p class="lead" id="research-text"></p>
       </header>
 
       <div class="map-wrap card">
         <div class="map-stage">
-          <svg id="map" viewBox="140 40 840 680" role="group" aria-label="Research map: three research topics and the papers that connect them"></svg>
-          <ul class="legend" aria-label="Legend">
-            <li><span class="dot dot-published"></span>Published</li>
-            <li><span class="dot dot-preprint"></span>Preprint</li>
-            <li><span class="dot dot-ring"></span>First author</li>
+          <svg id="map" viewBox="140 40 840 680" role="group" data-i18n-attr="aria-label:map.aria" aria-label="Research map: three research topics and the papers that connect them"></svg>
+          <ul class="legend" data-i18n-attr="aria-label:legend" aria-label="Legend">
+            <li><span class="dot dot-published"></span><span data-i18n="tag.published">Published</span></li>
+            <li><span class="dot dot-preprint"></span><span data-i18n="tag.preprint">Preprint</span></li>
+            <li><span class="dot dot-ring"></span><span data-i18n="tag.first">First author</span></li>
           </ul>
         </div>
         <aside class="map-panel" id="map-panel" aria-live="polite"></aside>
@@ -122,31 +131,31 @@
     <!-- Research, explained -->
     <section id="explained" class="section container">
       <header class="section-head">
-        <p class="kicker">Research, explained</p>
-        <h2 class="section-title">What I work on, in three experiments</h2>
-        <p class="lead">No equations needed. Each one is a small, real simulation of an idea behind my research.</p>
+        <p class="kicker" data-i18n="explained.kicker">Research, explained</p>
+        <h2 class="section-title" data-i18n="explained.title">What I work on, in three experiments</h2>
+        <p class="lead" data-i18n="explained.lead">No equations needed. Each one is a small, real simulation of an idea behind my research.</p>
       </header>
-      <div class="ex-tabs" role="tablist" aria-label="Research topics" id="ex-tabs"></div>
+      <div class="ex-tabs" role="tablist" data-i18n-attr="aria-label:explained.tabs" aria-label="Research topics" id="ex-tabs"></div>
       <div id="ex-panels"></div>
     </section>
 
     <!-- Publications -->
     <section id="publications" class="section container">
       <header class="section-head">
-        <p class="kicker">Publications</p>
-        <h2 class="section-title">Papers &amp; preprints</h2>
+        <p class="kicker" data-i18n="pubs.kicker">Publications</p>
+        <h2 class="section-title" data-i18n="pubs.title">Papers &amp; preprints</h2>
       </header>
-      <div class="filters" id="pub-filters" role="toolbar" aria-label="Filter publications"></div>
+      <div class="filters" id="pub-filters" role="toolbar" data-i18n-attr="aria-label:pubs.filterAria" aria-label="Filter publications"></div>
       <ol class="pubs" id="pubs"></ol>
     </section>
 
     <!-- Activities -->
     <section id="activities" class="section container">
       <header class="section-head">
-        <p class="kicker">Activities</p>
-        <h2 class="section-title">Talks, conferences &amp; schools</h2>
+        <p class="kicker" data-i18n="acts.kicker">Activities</p>
+        <h2 class="section-title" data-i18n="acts.title">Talks, conferences &amp; schools</h2>
       </header>
-      <div class="filters" id="act-filters" role="toolbar" aria-label="Filter activities"></div>
+      <div class="filters" id="act-filters" role="toolbar" data-i18n-attr="aria-label:acts.filterAria" aria-label="Filter activities"></div>
       <div id="acts"></div>
     </section>
 
@@ -154,12 +163,12 @@
     <section id="cv" class="section container">
       <header class="section-head cv-head">
         <div>
-          <p class="kicker">Curriculum vitae</p>
-          <h2 class="section-title">Path so far</h2>
+          <p class="kicker" data-i18n="cv.kicker">Curriculum vitae</p>
+          <h2 class="section-title" data-i18n="cv.title">Path so far</h2>
         </div>
         <a class="btn" id="cv-link" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 19h16"/></svg>
-          Full CV (PDF)
+          <span data-i18n="cv.full">Full CV (PDF)</span>
         </a>
       </header>
       <ol class="timeline" id="timeline"></ol>
@@ -169,43 +178,43 @@
   <footer id="contact" class="footer">
     <div class="container footer-grid">
       <div>
-        <h2 class="footer-title">Get in touch</h2>
+        <h2 class="footer-title" data-i18n="footer.title">Get in touch</h2>
         <p><a id="footer-email" class="email-link"></a></p>
         <address id="address"></address>
       </div>
       <div class="funding">
-        <svg class="eu-flag" viewBox="0 0 60 40" role="img" aria-label="Flag of the European Union">
+        <svg class="eu-flag" viewBox="0 0 60 40" role="img" data-i18n-attr="aria-label:footer.flag" aria-label="Flag of the European Union">
           <rect width="60" height="40" fill="#003399"/>
           <g fill="#FFCC00" id="eu-stars"></g>
         </svg>
-        <p>Funded by the European Union under the Marie Skłodowska-Curie Actions, as part of the <a href="https://tenors-network.eu/">TENORS</a> doctoral network.</p>
+        <p data-i18n-html="footer.funding">Funded by the European Union under the Marie Skłodowska-Curie Actions, as part of the <a href="https://tenors-network.eu/">TENORS</a> doctoral network.</p>
       </div>
     </div>
     <div class="container footer-bottom">
       <span>© <span id="year"></span> Llorenç Balada Gaggioli</span>
-      <a href="#top">Back to top ↑</a>
+      <a href="#top" data-i18n="footer.top">Back to top ↑</a>
     </div>
   </footer>
 
   <dialog class="cite-dialog" id="cite-dialog" aria-labelledby="cite-title">
     <form method="dialog" class="cite-inner">
       <header class="cite-head">
-        <h2 id="cite-title">Cite this paper</h2>
-        <button class="cite-close" value="close" aria-label="Close">×</button>
+        <h2 id="cite-title" data-i18n="cite.title">Cite this paper</h2>
+        <button class="cite-close" value="close" data-i18n-attr="aria-label:cite.close" aria-label="Close">×</button>
       </header>
       <p class="cite-paper" id="cite-paper"></p>
       <pre class="cite-bib" id="cite-bib" tabindex="0"></pre>
       <div class="links">
-        <button type="button" class="btn" id="cite-copy">Copy BibTeX</button>
-        <button type="button" class="link-btn" id="cite-link">Copy link to paper</button>
+        <button type="button" class="btn" id="cite-copy" data-i18n="cite.copy">Copy BibTeX</button>
+        <button type="button" class="link-btn" id="cite-link" data-i18n="cite.link">Copy link to paper</button>
       </div>
     </form>
   </dialog>
 
   <noscript><p class="container">This site needs JavaScript to show its content. Email: llorenc.balada.gaggioli@fel.cvut.cz</p></noscript>
 
-  <script src="assets/js/data.js?v=4"></script>
-  <script src="assets/js/main.js?v=4"></script>
-  <script src="assets/js/explain.js?v=4"></script>
+  <script src="assets/js/data.js?v=5"></script>
+  <script src="assets/js/main.js?v=5"></script>
+  <script src="assets/js/explain.js?v=5"></script>
 </body>
 </html>

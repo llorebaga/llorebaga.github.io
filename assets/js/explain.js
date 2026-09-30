@@ -8,6 +8,8 @@
   "use strict";
   const S = window.SITE;
   const E = S.explainers;
+  const T = window.I18N.t, tr = window.I18N.tr, LOC = window.I18N.locale;
+  const num = (x, digits = 0) => x.toLocaleString(LOC, { maximumFractionDigits: digits, minimumFractionDigits: digits });
   const SVGNS = "http://www.w3.org/2000/svg";
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -57,7 +59,7 @@
   // 1. Quantum control on the Bloch sphere
   // =====================================================================
   function buildQubit(host) {
-    const N = 8, T = 3, DT = T / N, OMEGA = 3, DELTA = 1, SUB = 14;
+    const N = 8, DURATION = 3, DT = DURATION / N, OMEGA = 3, DELTA = 1, SUB = 14;
     let u = new Array(N).fill(0);
     let az = -0.6, el = 0.35; // view angles
 
@@ -86,7 +88,7 @@
       const x1 = x * Math.cos(az) - y * Math.sin(az), y1 = x * Math.sin(az) + y * Math.cos(az);
       return { x: C + R * x1, y: C - R * (z * Math.cos(el) - y1 * Math.sin(el)), d: y1 * Math.cos(el) + z * Math.sin(el) };
     };
-    const sphere = s("svg", { viewBox: "0 0 320 320", class: "bloch", role: "img", "aria-label": "Bloch sphere showing the qubit state" });
+    const sphere = s("svg", { viewBox: "0 0 320 320", class: "bloch", role: "img", "aria-label": T("qc.sphereAria") });
     sphere.innerHTML = `<defs><radialGradient id="bl-g" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="var(--surface)"/><stop offset="1" stop-color="var(--surface-2)"/></radialGradient></defs>`;
     const gBack = s("g"), gFront = s("g"), gTraj = s("g", { class: "bl-traj" }), gTop = s("g");
     sphere.append(s("circle", { cx: C, cy: C, r: R, class: "bl-ball", fill: "url(#bl-g)" }), gBack, gTraj, gFront, gTop);
@@ -119,7 +121,7 @@
       gTop.append(s("circle", { cx: tgt.x, cy: tgt.y, r: 11, class: "bl-target" }), s("circle", { cx: tgt.x, cy: tgt.y, r: 4, class: "bl-target-dot" }));
       gTop.append(s("circle", { cx: st.x, cy: st.y, r: 4, class: "bl-start" }));
       label([0, 0, 1], "0", "bl-label", 10, -8);
-      label([0, 0, -1], "1 (target)", "bl-label", 16, 20);
+      label([0, 0, -1], T("qc.target"), "bl-label", 16, 20);
       // trajectory
       const path = res.path; lastPath = path;
       for (let i = 1; i < path.length; i++) {
@@ -133,12 +135,12 @@
 
     // --- pulse editor ---
     const PW = 320, PH = 150, PT = 14, PB = 24, mid = PT + (PH - PT - PB) / 2, amp = (PH - PT - PB) / 2;
-    const pulse = s("svg", { viewBox: `0 0 ${PW} ${PH}`, class: "pulse", role: "group", "aria-label": "Control pulse editor: drag bars up or down" });
+    const pulse = s("svg", { viewBox: `0 0 ${PW} ${PH}`, class: "pulse", role: "group", "aria-label": T("qc.pulseAria") });
     const bw = (PW - 20) / N;
     const bars = [];
     pulse.append(s("line", { x1: 10, y1: mid, x2: PW - 10, y2: mid, class: "pulse-zero" }));
-    pulse.append(s("text", { x: 10, y: PH - 6, class: "pulse-axis" }, "time →"));
-    pulse.append(s("text", { x: PW - 10, y: 11, class: "pulse-axis", "text-anchor": "end" }, "pulse strength"));
+    pulse.append(s("text", { x: 10, y: PH - 6, class: "pulse-axis" }, T("qc.time")));
+    pulse.append(s("text", { x: PW - 10, y: 11, class: "pulse-axis", "text-anchor": "end" }, T("qc.strength")));
     for (let k = 0; k < N; k++) {
       const r = s("rect", { class: "pulse-bar", x: 10 + k * bw + 3, width: bw - 6, rx: 4 });
       const hit = s("rect", { class: "pulse-hit", x: 10 + k * bw, y: PT, width: bw, height: PH - PT - PB });
@@ -184,12 +186,12 @@
       const res = evolve(u, true);
       draw(res); drawBars();
       const pct = res.F * 100;
-      fidNum.textContent = `${pct >= 99.95 ? "100" : pct.toFixed(1)}%`;
+      fidNum.textContent = `${pct >= 99.95 ? "100" : num(pct, 1)}%`;
       fidBar.style.width = `${pct}%`;
       fidBar.classList.toggle("done", res.F > 0.999);
-      status.textContent = res.F > 0.999 ? "Target reached: the qubit was flipped from 0 to 1." :
-        u.every((v) => v === 0) ? "No pulse yet: the arrow just stays at the north pole." :
-        res.F > 0.9 ? "Very close. Fine-tune the bars, or let the optimizer finish." : "Keep shaping the pulse to bring the arrow down to the target.";
+      status.textContent = res.F > 0.999 ? T("qc.done") :
+        u.every((v) => v === 0) ? T("qc.none") :
+        res.F > 0.9 ? T("qc.close") : T("qc.keep");
       return res;
     }
     let stopOpt = () => {};
@@ -211,16 +213,16 @@
       if (reduceMotion) { while (run()); return; }
       stopOpt = animate(run);
     }
-    const optBtn = h("button", { type: "button", class: "btn", onclick: optimize }, "Optimize");
-    const resetBtn = h("button", { type: "button", class: "link-btn", onclick: () => { stopOpt(); u = new Array(N).fill(0); update(); } }, "Reset");
+    const optBtn = h("button", { type: "button", class: "btn", onclick: optimize }, T("qc.optimize"));
+    const resetBtn = h("button", { type: "button", class: "link-btn", onclick: () => { stopOpt(); u = new Array(N).fill(0); update(); } }, T("qc.reset"));
 
     host.append(
       h("div", { class: "qubit-grid" },
         h("div", { class: "qubit-sphere" }, sphere),
         h("div", { class: "qubit-controls" },
-          h("p", { class: "viz-label" }, "Control pulse"),
+          h("p", { class: "viz-label" }, T("qc.pulse")),
           pulse,
-          h("div", { class: "fid" }, h("span", { class: "fid-label" }, "Match with target"), fidNum),
+          h("div", { class: "fid" }, h("span", { class: "fid-label" }, T("qc.match")), fidNum),
           h("div", { class: "fid-track" }, fidBar),
           status,
           h("div", { class: "links" }, optBtn, resetBtn)))
@@ -264,17 +266,17 @@
     const py = (y) => TOP + (1 - (y - yMin) / (yMax - yMin)) * (H - TOP - BOT);
     const yAt = (x) => { const t = (clamp(x, X0, X1) - X0) / (X1 - X0) * G, i = Math.min(G - 1, Math.floor(t)), f = t - i; return ys[i] * (1 - f) + ys[i + 1] * f; };
     const slope = (x) => (yAt(x + 1e-3) - yAt(x - 1e-3)) / 2e-3;
-    const score = (y) => (8 + (y - yMin) / (yMax - yMin) * 92).toFixed(1); // an arbitrary "cost" scale
+    const score = (y) => num(8 + (y - yMin) / (yMax - yMin) * 92, 1); // an arbitrary "cost" scale
 
-    const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, class: "land", role: "img", "aria-label": "An optimization landscape with several valleys" });
+    const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, class: "land", role: "img", "aria-label": T("po.aria") });
     const area = s("path", { class: "land-area" }), curve = s("path", { class: "land-curve" });
     const floorFill = s("rect", { class: "floor-fill", x: 0, width: W }), floorLine = s("line", { class: "floor-line", x1: 0, x2: W });
     const floorText = s("text", { class: "floor-text", x: W - PADX, "text-anchor": "end" });
     const gMark = s("g", { class: "gmark" }), trail = s("g", { class: "trail" });
     const ball = s("circle", { class: "ball", r: 9 });
-    const hint = s("text", { class: "land-hint", x: W / 2, y: TOP + 8, "text-anchor": "middle" }, "Click anywhere to drop a ball");
+    const hint = s("text", { class: "land-hint", x: W / 2, y: TOP + 8, "text-anchor": "middle" }, T("po.hint"));
     svg.append(area, floorFill, floorLine, curve, trail, gMark, ball, floorText, hint);
-    const status = h("p", { class: "ex-status", "aria-live": "polite" }, "Each point is an option; lower is better. The deepest valley is the best possible option.");
+    const status = h("p", { class: "ex-status", "aria-live": "polite" }, T("po.intro"));
 
     let stopBall = () => {}, stopFloor = () => {}, ballX = null, floorOn = false;
     function drawCurve() {
@@ -295,7 +297,7 @@
       const left = px(gx) > W / 2; // keep the label away from the global-minimum marker
       floorText.setAttribute("x", left ? PADX : W - PADX);
       floorText.setAttribute("text-anchor", left ? "start" : "end");
-      floorText.textContent = final ? `Certified: no option costs less than ${score(y)}` : "Raising the floor…";
+      floorText.textContent = final ? T("po.certified", { v: score(y) }) : T("po.raising");
       [floorLine, floorFill, floorText].forEach((n) => (n.style.display = "inline"));
     }
     function hideFloor() { [floorLine, floorFill, floorText].forEach((n) => (n.style.display = "none")); gMark.replaceChildren(); floorOn = false; }
@@ -303,7 +305,7 @@
       stopBall(); stopFloor(); hideFloor(); trail.replaceChildren(); ball.style.display = "none"; ballX = null;
       hint.style.display = "";
       drawCurve();
-      status.textContent = "Each point is an option; lower is better. The deepest valley is the best possible option.";
+      status.textContent = T("po.intro");
     }
 
     function drop(x) {
@@ -326,22 +328,22 @@
         still = Math.abs(v) < 0.01 && Math.abs(slope(ballX) * sx / sy) < 0.03 ? still + 1 : 0;
         if (still > 10 || time > 10) { settled(); return false; }
       };
-      status.textContent = "The ball rolls downhill, like a local optimization method…";
+      status.textContent = T("po.rolling");
       if (reduceMotion) { while (step(1 / 60) !== false); return; }
       stopBall = animate(step);
     }
     function settled() {
       const found = yAt(ballX), gap = found - yMin;
       if (floorOn) compare();
-      else status.textContent = `The ball stopped at cost ${score(found)}. Is this the deepest valley? The ball cannot tell. Press Certify to find out.`;
+      else status.textContent = T("po.stopped", { v: score(found) });
       return gap;
     }
     function compare() {
-      if (ballX == null) { status.textContent = `The floor stopped at cost ${score(yMin)}: the best possible value, and it comes with a proof.`; return; }
+      if (ballX == null) { status.textContent = T("po.floorOnly", { v: score(yMin) }); return; }
       const gap = yAt(ballX) - yMin;
       status.textContent = gap < (yMax - yMin) * 0.004
-        ? "The ball happened to find the deepest valley, but only the floor proves that no better option exists."
-        : `The ball got stuck in a local valley (cost ${score(yAt(ballX))}). The certified floor reveals a deeper one, with cost ${score(yMin)}.`;
+        ? T("po.lucky")
+        : T("po.stuck", { a: score(yAt(ballX)), b: score(yMin) });
     }
     function certify() {
       stopFloor(); gMark.replaceChildren();
@@ -371,10 +373,10 @@
       h("div", { class: "land-wrap" }, svg),
       status,
       h("div", { class: "links" },
-        h("button", { type: "button", class: "btn", onclick: certify }, "Certify global minimum"),
-        h("button", { type: "button", class: "link-btn", onclick: () => { drop(X0 + 0.1 + Math.random() * (X1 - X0 - 0.2)); } }, "Drop a random ball"),
-        h("button", { type: "button", class: "link-btn", onclick: () => { preset = (preset + 1) % PRESETS.length; setRoots(PRESETS[preset]); reset(); } }, "New landscape")),
-      h("p", { class: "ex-fine" }, "For one variable the certificate is exact. The moment–SOS hierarchies I work with extend the same idea to problems with thousands of variables.")
+        h("button", { type: "button", class: "btn", onclick: certify }, T("po.certify")),
+        h("button", { type: "button", class: "link-btn", onclick: () => { drop(X0 + 0.1 + Math.random() * (X1 - X0 - 0.2)); } }, T("po.random")),
+        h("button", { type: "button", class: "link-btn", onclick: () => { preset = (preset + 1) % PRESETS.length; setRoots(PRESETS[preset]); reset(); } }, T("po.new"))),
+      h("p", { class: "ex-fine" }, T("po.fine"))
     );
     setRoots(PRESETS[0]);
     reset();
@@ -411,9 +413,9 @@
 
   function buildLowRank(host) {
     const w = 90, hgt = 126, MAXR = 40;
-    const orig = h("canvas", { width: w, height: hgt, class: "lr-canvas", "aria-label": "Original photo" });
-    const recon = h("canvas", { width: w, height: hgt, class: "lr-canvas", "aria-label": "Photo rebuilt from a few patterns" });
-    const rank = h("input", { type: "range", min: 1, max: MAXR, value: 5, class: "range", "aria-label": "Number of patterns" });
+    const orig = h("canvas", { width: w, height: hgt, class: "lr-canvas", "aria-label": T("lr.origAria") });
+    const recon = h("canvas", { width: w, height: hgt, class: "lr-canvas", "aria-label": T("lr.recAria") });
+    const rank = h("input", { type: "range", min: 1, max: MAXR, value: 5, class: "range", "aria-label": T("lr.patternsAria") });
     const rankOut = h("strong", {}, "5");
     const rankNote = h("p", { class: "lr-note" });
     let dec = null;
@@ -421,7 +423,7 @@
     function drawRecon() {
       const r = +rank.value; rankOut.textContent = r;
       const kept = r * (w + hgt), total = w * hgt;
-      rankNote.textContent = `${kept.toLocaleString("en")} numbers instead of ${total.toLocaleString("en")} (${(100 * kept / total).toFixed(0)}% of the original).`;
+      rankNote.textContent = T("lr.note", { kept: num(kept), total: num(total), pct: num(100 * kept / total) });
       if (!dec) return;
       const ctx = recon.getContext("2d"), img = ctx.createImageData(w, hgt);
       for (let i = 0; i < hgt; i++) for (let j = 0; j < w; j++) {
@@ -451,7 +453,7 @@
 
     // --- exponential wall ---
     const CHI = 32, BYTES = 16; // complex double; tensor network bond dimension
-    const qubits = h("input", { type: "range", min: 1, max: 80, value: 10, class: "range", "aria-label": "Number of qubits" });
+    const qubits = h("input", { type: "range", min: 1, max: 80, value: 10, class: "range", "aria-label": T("lr.qubitsAria") });
     const qOut = h("strong", {}, "10");
     const exactBar = h("span", { class: "wall-fill exact" }), tnBar = h("span", { class: "wall-fill tn" });
     const exactVal = h("span", { class: "wall-val" }), tnVal = h("span", { class: "wall-val" });
@@ -459,7 +461,7 @@
     const fmtBytes = (b) => {
       const u = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
       let i = 0; while (b >= 1000 && i < u.length - 1) { b /= 1000; i++; }
-      return `${b >= 100 ? b.toFixed(0) : b.toFixed(1)} ${u[i]}${i === u.length - 1 && b >= 1000 ? "+" : ""}`;
+      return `${num(b, b >= 100 ? 0 : 1)} ${u[i]}${i === u.length - 1 && b >= 1000 ? "+" : ""}`;
     };
     const LOGMAX = Math.log10(BYTES * 2 ** 80);
     function drawWall() {
@@ -470,10 +472,10 @@
       exactVal.textContent = fmtBytes(exact); tnVal.textContent = fmtBytes(tn);
       exactBar.classList.toggle("over", exact > 1e16);
       verdict.textContent =
-        exact <= 16e9 ? `${n} qubits: the exact description still fits in a laptop's memory.` :
-        exact <= 1e16 ? `${n} qubits: exact simulation now needs one of the world's largest supercomputers.` :
-        exact <= 2e23 ? `${n} qubits: beyond every supercomputer on Earth. The tensor network needs just ${fmtBytes(tn)}.` :
-        `${n} qubits: more memory than all the data humanity has ever stored. The tensor network: ${fmtBytes(tn)}.`;
+        exact <= 16e9 ? T("lr.v1", { n }) :
+        exact <= 1e16 ? T("lr.v2", { n }) :
+        exact <= 2e23 ? T("lr.v3", { n, tn: fmtBytes(tn) }) :
+        T("lr.v4", { n, tn: fmtBytes(tn) });
     }
     qubits.addEventListener("input", drawWall);
 
@@ -482,17 +484,17 @@
         h("div", { class: "lr-photo" },
           h("p", { class: "viz-label" }, "A photo is a big table of numbers…"),
           h("div", { class: "lr-pair" },
-            h("figure", {}, orig, h("figcaption", {}, "Original")),
-            h("figure", {}, recon, h("figcaption", {}, "Rebuilt"))),
-          h("label", { class: "range-row" }, h("span", {}, "Simple patterns used: ", rankOut), rank),
+            h("figure", {}, orig, h("figcaption", {}, T("lr.original"))),
+            h("figure", {}, recon, h("figcaption", {}, T("lr.rebuilt")))),
+          h("label", { class: "range-row" }, h("span", {}, T("lr.patterns"), rankOut), rank),
           rankNote),
         h("div", { class: "lr-wall" },
           h("p", { class: "viz-label" }, "…and so is a quantum state, but a much bigger one"),
-          h("label", { class: "range-row" }, h("span", {}, "Qubits: ", qOut), qubits),
-          h("div", { class: "wall-row" }, h("span", { class: "wall-name" }, "Exact description"), h("span", { class: "wall-track" }, exactBar), exactVal),
-          h("div", { class: "wall-row" }, h("span", { class: "wall-name" }, "Tensor network"), h("span", { class: "wall-track" }, tnBar), tnVal),
+          h("label", { class: "range-row" }, h("span", {}, T("lr.qubits"), qOut), qubits),
+          h("div", { class: "wall-row" }, h("span", { class: "wall-name" }, T("lr.exact")), h("span", { class: "wall-track" }, exactBar), exactVal),
+          h("div", { class: "wall-row" }, h("span", { class: "wall-name" }, T("lr.tn")), h("span", { class: "wall-track" }, tnBar), tnVal),
           verdict,
-          h("p", { class: "ex-fine" }, "Memory on a logarithmic scale. The tensor network assumes limited entanglement (bond dimension 32), which is exactly the kind of structure that real problems often have.")))
+          h("p", { class: "ex-fine" }, T("lr.fine"))))
     );
     drawRecon(); drawWall();
   }
@@ -513,15 +515,15 @@
     tabs.append(h("button", {
       type: "button", role: "tab", id: `ex-tab-${k}`, "aria-controls": `ex-panel-${k}`, "aria-selected": "false", tabindex: "-1",
       class: "ex-tab", onclick: () => open(k, false)
-    }, h("span", { class: "ex-num", style: `background:${COLORS[k]}` }, String(i + 1)), h("span", {}, ex.tab)));
+    }, h("span", { class: "ex-num", style: `background:${COLORS[k]}` }, String(i + 1)), h("span", {}, tr(ex.tab))));
 
     const viz = h("div", { class: "ex-viz" });
     panels.append(h("div", { class: "ex-panel card", role: "tabpanel", id: `ex-panel-${k}`, "aria-labelledby": `ex-tab-${k}`, hidden: true },
       h("div", { class: "ex-text" },
-        h("h3", {}, ex.title),
-        ex.body.map((p) => h("p", {}, p)),
-        h("p", { class: "ex-try" }, h("strong", {}, "Try it. "), ex.tryIt),
-        h("p", { class: "ex-papers" }, "In my papers: ",
+        h("h3", {}, tr(ex.title)),
+        tr(ex.body).map((p) => h("p", {}, p)),
+        h("p", { class: "ex-try" }, h("strong", {}, T("ex.try")), tr(ex.tryIt)),
+        h("p", { class: "ex-papers" }, T("ex.papers"),
           ex.papers.filter((id) => pubById[id]).map((id, j) => [j ? ", " : "",
             h("a", { href: `#pub-${id}`, title: pubById[id].title }, id)]))),
       viz));
@@ -560,4 +562,6 @@
   }
   open(keys[0], false);
   window.Explainer = { open: (k) => open(k, true) };
+  // Last script on the page: everything is rendered, so a language switch can return to the same spot.
+  window.I18N.restoreScroll();
 })();
