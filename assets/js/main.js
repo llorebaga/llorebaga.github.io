@@ -357,6 +357,38 @@
   $("#cite-link").addEventListener("click", (e) => copyText(`${location.origin}${location.pathname}${I18N.lang === "en" ? "" : `?lang=${I18N.lang}`}#pub-${citing.id}`, e.currentTarget, T("cite.linkCopied")));
   citeDialog.addEventListener("click", (e) => { if (e.target === citeDialog) citeDialog.close(); });
 
+  // ---------- projects ----------
+  (S.projects || []).forEach((pr) => {
+    const logo = h("div", { class: "project-logo", "aria-hidden": "true" }, h("span", { class: "project-logo-text" }, pr.name));
+    const stat = h("p", { class: "project-stat", hidden: true });
+    $("#projects-list").append(h("article", { class: "project card", id: `project-${pr.id}` },
+      h("div", { class: "project-glow", "aria-hidden": "true" }),
+      h("a", { class: "project-visual", href: pr.url, target: "_blank", rel: "noopener", tabindex: "-1", "aria-hidden": "true" }, logo),
+      h("div", { class: "project-body" },
+        h("p", { class: "kicker" }, tr(pr.kicker)),
+        h("h2", { class: "section-title" }, h("a", { href: pr.url, target: "_blank", rel: "noopener" }, `${pr.name}: ${tr(pr.title)}`)),
+        h("p", { class: "lead" }, tr(pr.blurb)),
+        stat,
+        h("div", { class: "project-links" },
+          h("a", { class: "btn", href: pr.url, target: "_blank", rel: "noopener" }, tr(pr.cta), icon(ICONS.arrow)),
+          ...(pr.links || []).map((l) => h("a", { class: "chip", href: l.href, target: "_blank", rel: "noopener" }, tr(l.label)))))));
+
+    // The logo is inlined (not an <img>) so its letters follow this site's light/dark theme.
+    if (pr.logo) fetch(pr.logo).then((r) => (r.ok ? r.text() : Promise.reject())).then((svg) => {
+      logo.innerHTML = svg.replace(/<title[^>]*>.*?<\/title>/s, "").replace(/\saria-labelledby="[^"]*"/, "");
+    }).catch(() => {});
+    // Optional live number, read from the project's own homepage (same site, so no CORS issue).
+    if (pr.stat) fetch(pr.url).then((r) => (r.ok ? r.text() : Promise.reject())).then((html) => {
+      const text = new DOMParser().parseFromString(html, "text/html").body.textContent.replace(/\s+/g, " ");
+      const m = text.match(new RegExp(pr.stat.pattern));
+      if (!m) return;
+      const n = Number(m[1].replace(/[^\d]/g, ""));
+      if (!n) return;
+      stat.hidden = false;
+      stat.append(h("strong", {}, n.toLocaleString(I18N.locale)), " ", tr(pr.stat.label), h("span", { class: "project-live" }, T("projects.stat")));
+    }).catch(() => {});
+  });
+
   // ---------- activities ----------
   const KIND_COLOR = { conference: "var(--blue)", workshop: "var(--green)", school: "var(--yellow)", visit: "#c77d9b", course: "var(--ink-faint)" };
   const actFilters = [
@@ -400,6 +432,7 @@
 
   // ---------- CV ----------
   $("#cv-link").href = P.links.cv;
+  if (P.cvUpdated) $("#cv-updated").textContent = T("cv.updated", { date: fmtMonth(P.cvUpdated) });
   $("#timeline").append(...S.cv.map((e) =>
     h("li", { class: `tl ${e.kind}${e.end ? "" : " current"}` },
       h("div", { class: "tl-date" }, `${fmtMonth(e.start)} – ${e.end ? fmtMonth(e.end) : T("cv.present")}`),
@@ -475,7 +508,7 @@
   syncTheme();
 
   if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    const els = document.querySelectorAll(".section-head, .map-wrap, .intro-grid > *, .pub, .act-year, .tl");
+    const els = document.querySelectorAll(".section-head, .map-wrap, .intro-grid > *, .project, .pub, .act-year, .tl");
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
     }, { rootMargin: "0px 0px -8% 0px" });

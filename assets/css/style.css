@@ -617,3 +617,52 @@ address { font-style: normal; color: var(--ink-soft); margin-top: 12px; font-siz
 @media (max-width: 440px) {
   .brand span { display: none; }
 }
+
+/* ------------------------------------------------------------------
+   Projects (QOC)
+------------------------------------------------------------------ */
+.project {
+  position: relative; overflow: hidden; isolation: isolate;
+  display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 40px; align-items: center;
+  padding: 40px 44px;
+}
+/* Soft cyan-violet-pink glow borrowed from the QOC brand */
+.project-glow {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(40% 70% at 12% 30%, rgba(34, 211, 238, .16), transparent 70%),
+    radial-gradient(40% 70% at 30% 80%, rgba(124, 92, 255, .14), transparent 70%),
+    radial-gradient(35% 60% at 95% 10%, rgba(240, 70, 155, .10), transparent 70%);
+}
+.project-visual { display: block; text-decoration: none; transition: transform .3s ease; }
+.project-visual:hover { transform: scale(1.03); }
+.project-logo svg { width: 100%; height: auto; display: block; }
+.project-logo-text {
+  display: block; text-align: center; font: 700 72px/1 var(--sans); letter-spacing: .04em;
+  background: linear-gradient(90deg, #22d3ee, #7c5cff, #f0469b); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.project-body .section-title a { color: var(--ink) !important; text-decoration: none; }
+.project-body .section-title a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: #7c5cff; }
+.project-body .lead { max-width: 62ch; }
+.project-stat { margin: 16px 0 0; font-size: 15px; color: var(--ink-soft); display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.project-stat[hidden] { display: none; }
+.project-stat strong { font: 400 26px var(--serif); color: var(--ink); }
+.project-live {
+  display: inline-flex; align-items: center; gap: 6px; margin-left: 4px; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  background: color-mix(in srgb, #7c5cff 14%, transparent); color: var(--accent-ink);
+}
+.project-live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: live 2s ease-in-out infinite; }
+@keyframes live { 50% { opacity: .3; } }
+.project-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 22px; }
+.project-links .btn svg { width: 15px; height: 15px; fill: currentColor; stroke: none; }
+.project-links .chip { text-decoration: none; }
+@media (max-width: 860px) {
+  .project { grid-template-columns: 1fr; gap: 20px; padding: 28px 22px; }
+  .project-visual { max-width: 240px; }
+}
+
+/* CV button + last-updated note */
+.cv-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.cv-updated { font-size: 13px; color: var(--ink-faint); }
+@media (max-width: 640px) { .cv-actions { align-items: flex-start; } }

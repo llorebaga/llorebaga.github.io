@@ -10,11 +10,12 @@ Everything you'd want to edit lives in **[`assets/js/data.js`](assets/js/data.js
 
 | What | Where in `data.js` |
 | --- | --- |
-| Name, role, links, email, address | `person` |
+| Name, role, links, email, address | `person` (`links.cv` points to `assets/docs/`, `cvUpdated` sets the date next to the CV button) |
 | News items on the front page | `news` (link one to a paper with `paper: "ID"`) |
 | About / research text | `about`, `research` |
 | Papers | `publications` (newest first; published ones also get a `cite` block for BibTeX) |
 | "Research, explained" texts | `explainers` (the simulations themselves are in `assets/js/explain.js`) |
+| Featured projects (QOC) | `projects` |
 | Talks, conferences, schools, visits | `activities` |
 | CV timeline | `cv` |
 
@@ -86,3 +87,8 @@ choice, then their browser language.
 - **Interface labels** (menus, buttons, filters, the experiments' messages) are in
   `assets/js/i18n.js`, one dictionary per language. To add a language, add a dictionary there, add
   translations in `data.js`, and add a link to the `.lang-switch` in `index.html`.
+
+## Updating the CV
+
+Replace `assets/docs/CV_Llorenc_Balada_Gaggioli.pdf` with the new PDF (same file name) and set
+`person.cvUpdated` in `data.js` to the current month, e.g. `"2026-10"`.

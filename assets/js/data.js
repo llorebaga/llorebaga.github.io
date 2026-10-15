@@ -27,8 +27,9 @@ window.SITE = {
       scholar: "https://scholar.google.com/citations?hl=en&user=3zhaXhgAAAAJ",
       github: "https://github.com/llorebaga",
       linkedin: "https://www.linkedin.com/in/lloren%C3%A7/",
-      cv: "https://drive.google.com/file/d/15PzmkshPGyUGtTX9MOb_gjPfW7Bm3Ndv/view"
+      cv: "assets/docs/CV_Llorenc_Balada_Gaggioli.pdf"
     },
+    cvUpdated: "2026-10", // shown next to the CV button
     address: {
       en: ["Office KN:E-302", "Karlovo náměstí 13", "Praha 2, Czech Republic"],
       ca: ["Despatx KN:E-302", "Karlovo náměstí 13", "Praga 2, República Txeca"]
@@ -215,6 +216,33 @@ window.SITE = {
       links: { journal: "https://doi.org/10.1063/5.0210971" },
       cite: { journal: "The Journal of Chemical Physics", volume: "160", number: "234106", doi: "10.1063/5.0210971" },
       abstract: "Basis sets consisting of functions that form linearly independent products (LIPs) have remarkable applications in quantum chemistry but are scarce because of mathematical limitations. We show how to linearly transform a given set of basis functions to maximize the linear independence of their products by maximizing the determinant of the appropriate Gram matrix. The proposed method enhances the utility of the LIP basis set technology and clarifies why canonical molecular orbitals form LIPs more readily than atomic orbitals. The same approach can also be used to orthogonalize basis functions themselves, which means that various orthogonalization techniques may be viewed as special cases of a certain nonlinear optimization problem."
+    }
+  ],
+
+  // Projects featured after "Research, explained". stat: optional live number read from the project's page.
+  projects: [
+    {
+      id: "qoc",
+      name: "QOC",
+      url: "https://llorebaga.github.io/QOC/",
+      logo: "assets/img/qoc-logo.svg",
+      title: { en: "Quantum optimal control, mapped", ca: "el control òptim quàntic, cartografiat" },
+      kicker: { en: "Project", ca: "Projecte" },
+      blurb: {
+        en: "QOC is my living guide to the whole field of quantum optimal control: its methods, its limits, its people and its open questions, with new arXiv papers tracked every day.",
+        ca: "QOC és la meva guia viva de tot el camp del control òptim quàntic: els seus mètodes, els seus límits, la seva gent i les seves preguntes obertes, amb el seguiment diari dels nous articles d'arXiv."
+      },
+      cta: { en: "Visit QOC", ca: "Visita QOC" },
+      stat: {
+        pattern: "([\\d,.]+)\\s*quantum control papers on arXiv",
+        label: { en: "quantum control papers tracked since 2000", ca: "articles de control quàntic seguits des del 2000" }
+      },
+      links: [
+        { href: "https://llorebaga.github.io/QOC/map/", label: { en: "Field map", ca: "Mapa del camp" } },
+        { href: "https://llorebaga.github.io/QOC/papers/", label: { en: "Latest papers", ca: "Articles recents" } },
+        { href: "https://llorebaga.github.io/QOC/groups/", label: { en: "Research groups", ca: "Grups de recerca" } },
+        { href: "https://llorebaga.github.io/QOC/open-problems/", label: { en: "Open problems", ca: "Problemes oberts" } }
+      ]
     }
   ],
 
