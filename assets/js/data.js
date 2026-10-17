@@ -52,8 +52,8 @@ window.SITE = {
 
   news: [
     { date: "2026-10", paper: "RCS", text: {
-      en: "New single-author preprint: <em>Time-optimal robust quantum control for partially known errors</em>.",
-      ca: "Nou preprint en solitari: <em>Time-optimal robust quantum control for partially known errors</em>." } },
+      en: "New preprint: <em>Time-optimal robust quantum control for partially known errors</em>.",
+      ca: "Nou preprint: <em>Time-optimal robust quantum control for partially known errors</em>." } },
     { date: "2026-06", paper: "RCQC", text: {
       en: "New preprint with Younes Naceur: <em>Reachability and optimal-time certificates for quantum control</em>.",
       ca: "Nou preprint amb Younes Naceur: <em>Reachability and optimal-time certificates for quantum control</em>." } },
@@ -61,8 +61,8 @@ window.SITE = {
       en: "New preprint with Didier Henrion and Milan Korda: <em>Composition and tensor train structure in polynomial optimization</em>.",
       ca: "Nou preprint amb Didier Henrion i Milan Korda: <em>Composition and tensor train structure in polynomial optimization</em>." } },
     { date: "2026-04", paper: "LR2Q", text: {
-      en: "New single-author preprint: <em>Low-rank geometry of two-qubit gates</em>.",
-      ca: "Nou preprint en solitari: <em>Low-rank geometry of two-qubit gates</em>." } }
+      en: "New preprint: <em>Low-rank geometry of two-qubit gates</em>.",
+      ca: "Nou preprint: <em>Low-rank geometry of two-qubit gates</em>." } }
   ],
 
   // The three research areas in the research map. mapLabel: the lines inside the map bubble.
@@ -331,6 +331,7 @@ window.SITE = {
   activities: [
     { date: "2026-11", kind: "workshop", title: "TENORS Doctoral Days", place: { en: "Firenze", ca: "Florència" }, role: "" },
     { date: "2026-10", kind: "visit", title: "HSBC", place: { en: "London", ca: "Londres" }, role: "" },
+    { date: "2026-10", kind: "visit", title: "Quantic, BSC", place: "Barcelona", role: "" },
     { date: "2026-09", kind: "visit", title: "Grup d'Informació Quàntica, UAB", place: "Barcelona", role: "" },
     { date: "2026-09", kind: "visit", title: "HSBC", place: { en: "Singapore", ca: "Singapur" }, role: "" },
     { date: "2026-07", kind: "workshop", title: "TENORS Workshop 2", place: "Trento", role: "" },
