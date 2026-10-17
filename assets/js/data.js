@@ -51,6 +51,9 @@ window.SITE = {
   },
 
   news: [
+    { date: "2026-10", paper: "RCS", text: {
+      en: "New single-author preprint: <em>Time-optimal robust quantum control for partially known errors</em>.",
+      ca: "Nou preprint en solitari: <em>Time-optimal robust quantum control for partially known errors</em>." } },
     { date: "2026-06", paper: "RCQC", text: {
       en: "New preprint with Younes Naceur: <em>Reachability and optimal-time certificates for quantum control</em>.",
       ca: "Nou preprint amb Younes Naceur: <em>Reachability and optimal-time certificates for quantum control</em>." } },
@@ -97,6 +100,19 @@ window.SITE = {
    * map: [x, y] position of the bubble in the research map (omit to leave it off the map)
    */
   publications: [
+    {
+      id: "RCS",
+      title: "Time-optimal robust quantum control for partially known errors",
+      authors: ["Llorenç Balada Gaggioli"],
+      venue: { en: "arXiv preprint", ca: "Preprint a arXiv" },
+      date: "2026-10-15",
+      status: "preprint",
+      firstAuthor: true,
+      topics: ["qc"],
+      map: [448, 58],
+      links: { arxiv: "https://arxiv.org/abs/2610.21596", code: "https://github.com/llorebaga/RobustSubspace" },
+      abstract: "Robust quantum control usually assumes one of two extremes: the error is of a known form and only its strength is unknown, or nothing at all is known about it. In practice one often sits in between. The size of a static error is unknown, but its class is known, for example, it only shifts energy levels, or it acts on each subsystem separately. We ask how fast a control can cancel, to first order, every error in such a class. A time-independent Hamiltonian can do this if and only if all errors in the class have zero diagonal in a common basis. In that case an equally spaced energy ladder in this basis does it after one period. A lower bound that holds for any time-dependent control with bounded drive power shows that this simple constant control is optimal for several natural classes, including unknown level shifts and unknown local errors on two subsystems. Completely unknown errors need a time-dependent control, and there, knowing the error class shortens the minimum time by a factor √(d²+1). So partial knowledge of the error changes not only how long an optimal robust control takes, but also its form."
+    },
     {
       id: "RCQC",
       title: "Reachability and optimal-time certificates for quantum control",
@@ -265,7 +281,7 @@ window.SITE = {
         en: "Drag the bars to shape the pulse and steer the arrow from north (0) to the target at the south pole (1). Or press Optimize and let the computer search for you. Drag the sphere to rotate it.",
         ca: "Arrossega les barres per donar forma al pols i porta la fletxa del nord (0) fins a l'objectiu, al pol sud (1). O prem Optimitza i deixa que l'ordinador ho busqui per tu. Arrossega l'esfera per girar-la."
       },
-      papers: ["QCPOP", "UGS", "RCQC", "RSE"]
+      papers: ["QCPOP", "UGS", "RCQC", "RSE", "RCS"]
     },
     po: {
       tab: { en: "Finding the true best", ca: "Trobar el millor de veritat" },
