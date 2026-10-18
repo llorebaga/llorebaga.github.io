@@ -330,11 +330,11 @@ window.SITE = {
    */
   activities: [
     { date: "2026-11", kind: "workshop", title: "TENORS Doctoral Days", place: { en: "Firenze", ca: "Florència" }, role: "" },
-    { date: "2026-10", kind: "visit", title: "HSBC", place: { en: "London", ca: "Londres" }, role: "" },
-    { date: "2026-10", kind: "visit", title: "Quantic, BSC", place: "Barcelona", role: "" },
-    { date: "2026-09", kind: "visit", title: "Grup d'Informació Quàntica, UAB", place: "Barcelona", role: "" },
+    { date: "2026-10", kind: "visit", title: "HSBC", place: { en: "London", ca: "Londres" }, role: "talk" },
+    { date: "2026-10", kind: "visit", title: "Quantic, BSC", place: "Barcelona", role: "talk" },
+    { date: "2026-09", kind: "visit", title: "Grup d'Informació Quàntica, UAB", place: "Barcelona", role: "talk" },
     { date: "2026-09", kind: "visit", title: "HSBC", place: { en: "Singapore", ca: "Singapur" }, role: "" },
-    { date: "2026-07", kind: "workshop", title: "TENORS Workshop 2", place: "Trento", role: "" },
+    { date: "2026-07", kind: "workshop", title: "TENORS Workshop 2", place: "Trento", role: "talk" },
     { date: "2026-06", kind: "conference", title: "SIAM Conference on Optimization", place: { en: "Edinburgh", ca: "Edimburg" }, role: "talk" },
     { date: "2026-06", kind: "workshop", title: "DO Workshop", place: { en: "Carcassonne", ca: "Carcassona" }, role: "talk" },
     { date: "2026-06", kind: "workshop", title: "IBM Quantum Optimization Workshop", place: { en: "Prague", ca: "Praga" }, role: "" },
