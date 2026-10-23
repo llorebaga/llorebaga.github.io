@@ -46,6 +46,7 @@ and Polynomial Optimization + Low-rank `(560, 610)`, each with radius 90. Keep b
 inside their cluster circle and at least ~70 units apart. Single-topic papers sit just outside their
 topic and get a short connector (e.g. RSE and RCS around Quantum Control, MSD below Quantum Computing).
 A new topic needs `at: [x, y]` and `r` in `data.js`; Quantum Computing is at `(228, 150)` with `r: 80`.
+A topic can also list `links: ["qc"]` to draw a connector to another topic circle.
 
 ### Activities
 

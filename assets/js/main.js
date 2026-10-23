@@ -120,6 +120,16 @@
     g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select({ topic: key }); } });
     gTopics.append(g);
   }
+  // Topic-to-topic connectors (data.js: `links: ["qc"]`), drawn from rim to rim.
+  for (const a of topicKeys) for (const b of S.topics[a].links || []) {
+    if (!TOPIC_POS[b]) continue;
+    const [ax, ay] = TOPIC_POS[a], [bx, by] = TOPIC_POS[b], d = Math.hypot(bx - ax, by - ay);
+    const ux = (bx - ax) / d, uy = (by - ay) / d;
+    gEdges.append(reg(s("line", {
+      class: "m-edge",
+      x1: ax + ux * TOPIC_R[a], y1: ay + uy * TOPIC_R[a], x2: bx - ux * TOPIC_R[b], y2: by - uy * TOPIC_R[b]
+    }), [`t:${a}`, `t:${b}`]));
+  }
   for (const p of S.publications) {
     if (!p.map) continue;
     const [cx, cy] = p.map;

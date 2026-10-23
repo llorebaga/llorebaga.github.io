@@ -100,6 +100,7 @@ window.SITE = {
       name: { en: "Quantum Computing", ca: "Computació quàntica" },
       mapLabel: { en: ["Quantum", "Computing"], ca: ["Computació", "quàntica"] },
       at: [228, 150],
+      links: ["qc"], // connector to the Quantum Control circle
       r: 80,
       blurb: {
         en: "Fault-tolerant quantum computing: how much it costs to produce the resources, such as magic states, that make universal quantum computation possible.",
