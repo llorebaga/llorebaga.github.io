@@ -32,7 +32,7 @@ Add an object to `publications`:
   date: "2026-10-01",
   status: "preprint",               // or "published" (green on the map)
   firstAuthor: true,                // thick ring on the map
-  topics: ["qc", "lr"],             // qc = Quantum Control, po = Polynomial Optimization, lr = Low-rank Structure
+  topics: ["qc", "lr"],             // qc = Quantum Control, po = Polynomial Optimization, lr = Low-rank Structure, qcomp = Quantum Computing
   map: [760, 300],                  // bubble position in the research map (omit to keep it off the map)
   links: { arxiv: "…", journal: "…", code: "…" },
   cite: { journal: "Physical Review A", volume: "112", number: "062612", doi: "…" }, // published papers only
@@ -43,7 +43,9 @@ Add an object to `publications`:
 Map coordinates use the SVG viewBox `140 40 840 680`. The overlap clusters are centred at
 Quantum Control + Polynomial Optimization `(350, 330)`, Quantum Control + Low-rank `(770, 330)`,
 and Polynomial Optimization + Low-rank `(560, 610)`, each with radius 90. Keep bubbles (radius 34)
-inside their cluster circle and at least ~70 units apart.
+inside their cluster circle and at least ~70 units apart. Single-topic papers sit just outside their
+topic and get a short connector (e.g. RSE and RCS around Quantum Control, MSD below Quantum Computing).
+A new topic needs `at: [x, y]` and `r` in `data.js`; Quantum Computing is at `(228, 150)` with `r: 80`.
 
 ### Activities
 

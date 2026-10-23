@@ -51,6 +51,9 @@ window.SITE = {
   },
 
   news: [
+    { date: "2026-10", paper: "MSD", text: {
+      en: "New preprint with Jakub Mareček: <em>The limits of magic-state distillation</em>.",
+      ca: "Nou preprint amb Jakub Mareček: <em>The limits of magic-state distillation</em>." } },
     { date: "2026-10", paper: "RCS", text: {
       en: "New preprint: <em>Time-optimal robust quantum control for partially known errors</em>.",
       ca: "Nou preprint: <em>Time-optimal robust quantum control for partially known errors</em>." } },
@@ -65,7 +68,8 @@ window.SITE = {
       ca: "Nou preprint: <em>Low-rank geometry of two-qubit gates</em>." } }
   ],
 
-  // The three research areas in the research map. mapLabel: the lines inside the map bubble.
+  // Research areas in the research map. mapLabel: the lines inside the map bubble.
+  // The first three form the original triangle; others set their own position `at` and radius `r`.
   topics: {
     qc: {
       name: { en: "Quantum Control", ca: "Control quàntic" },
@@ -90,6 +94,17 @@ window.SITE = {
         en: "Tensor networks and tensor decompositions (MPOs, tensor trains, CP rank) that make large problems tractable.",
         ca: "Xarxes de tensors i descomposicions tensorials (MPO, tensor trains, rang CP) que fan tractables problemes molt grans."
       }
+    },
+    // A fourth, smaller topic in the top-left corner (outside the original triangle).
+    qcomp: {
+      name: { en: "Quantum Computing", ca: "Computació quàntica" },
+      mapLabel: { en: ["Quantum", "Computing"], ca: ["Computació", "quàntica"] },
+      at: [228, 150],
+      r: 80,
+      blurb: {
+        en: "Fault-tolerant quantum computing: how much it costs to produce the resources, such as magic states, that make universal quantum computation possible.",
+        ca: "Computació quàntica tolerant a errors: quant costa produir els recursos, com els estats màgics, que fan possible la computació quàntica universal."
+      }
     }
   },
 
@@ -100,6 +115,19 @@ window.SITE = {
    * map: [x, y] position of the bubble in the research map (omit to leave it off the map)
    */
   publications: [
+    {
+      id: "MSD",
+      title: "The limits of magic-state distillation",
+      authors: ["Llorenç Balada Gaggioli", "Jakub Mareček"],
+      venue: { en: "arXiv preprint", ca: "Preprint a arXiv" },
+      date: "2026-10-22",
+      status: "preprint",
+      firstAuthor: true,
+      topics: ["qcomp"],
+      map: [186, 290],
+      links: { arxiv: "https://arxiv.org/abs/2610.31115" },
+      abstract: "Magic-state factories are a major cost of fault-tolerant quantum computing, yet how few noisy inputs they need is known only for restricted protocols. We show that, for tolerating input faults, any stabilizer protocol, however adaptive, postselected or multistage, is no better than a projection onto one stabilizer code, and that for rational targets a fault pattern is harmful exactly when its complement is. Searches over all codes show that quadratic distillation of one T state needs exactly nine inputs and that the eight-input CCZ factory is optimal. At order d, one T state needs n ≥ 2d."
+    },
     {
       id: "RCS",
       title: "Time-optimal robust quantum control for partially known errors",

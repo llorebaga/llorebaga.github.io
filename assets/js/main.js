@@ -83,8 +83,10 @@
   $("#research-text").innerHTML = tr(S.research);
 
   // ---------- research map ----------
-  // Geometry follows the original hand-made map.
-  const TOPIC_POS = { qc: [560, 150], po: [250, 520], lr: [870, 520] };
+  // Geometry follows the original hand-made map; extra topics set `at` and `r` in data.js.
+  const DEFAULT_POS = { qc: [560, 150], po: [250, 520], lr: [870, 520] };
+  const TOPIC_POS = Object.fromEntries(topicKeys.map((k) => [k, S.topics[k].at || DEFAULT_POS[k]]));
+  const TOPIC_R = Object.fromEntries(topicKeys.map((k) => [k, S.topics[k].r || 100]));
   const CLUSTERS = {
     "qc+po": { at: [350, 330], edges: [["qc", [484, 215, 418, 271]], ["po", [297, 431, 308, 410]]] },
     "qc+lr": { at: [770, 330], edges: [["qc", [636, 215, 702, 271]], ["lr", [823, 431, 812, 410]]] },
@@ -111,7 +113,7 @@
     const text = s("text", { x: cx, y: cy - (words.length - 1) * 15 + 7 },
       ...words.map((w, i) => s("tspan", { x: cx, dy: i ? 30 : 0 }, w)));
     const g = reg(s("g", { class: "m-topic", tabindex: 0, role: "button", "aria-label": T("map.topicAria", { name: tr(S.topics[key].name) }), "data-topic": key },
-      s("circle", { cx, cy, r: 100 }), text), [`t:${key}`]);
+      s("circle", { cx, cy, r: TOPIC_R[key] }), text), [`t:${key}`]);
     g.addEventListener("mouseenter", () => preview({ topic: key }));
     g.addEventListener("mouseleave", restore);
     g.addEventListener("click", () => select({ topic: key }));
@@ -126,11 +128,11 @@
     if (ck) keys.push(`c:${ck}`, ...p.topics.map((t) => `e:${ck}:${t}`));
     else if (p.topics.length === 1) {
       // Single-topic paper: draw a short connector to its topic bubble.
-      const [tx, ty] = TOPIC_POS[p.topics[0]];
+      const [tx, ty] = TOPIC_POS[p.topics[0]], tr0 = TOPIC_R[p.topics[0]];
       const dx = cx - tx, dy = cy - ty, d = Math.hypot(dx, dy);
       gEdges.append(reg(s("line", {
         class: "m-edge",
-        x1: tx + dx / d * 100, y1: ty + dy / d * 100, x2: cx - dx / d * 34, y2: cy - dy / d * 34
+        x1: tx + dx / d * tr0, y1: ty + dy / d * tr0, x2: cx - dx / d * 34, y2: cy - dy / d * 34
       }), [`p:${p.id}`, `t:${p.topics[0]}`]));
       keys.push(`e:solo:${p.id}`);
     }
