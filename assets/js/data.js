@@ -358,7 +358,7 @@ window.SITE = {
    * Event titles stay in their original language; places can be translated.
    */
   activities: [
-    { date: "2026-11-30", kind: "workshop", title: "TENORS Doctoral Days", place: { en: "Firenze", ca: "Florència" }, role: "" },
+    { date: "2026-11-25", kind: "workshop", title: "TENORS Doctoral Days", place: { en: "Firenze", ca: "Florència" }, role: "" },
     { date: "2026-11-11", kind: "workshop", title: "Optimization Workshop", place: { en: "Prague", ca: "Praga" }, role: "" },
     { date: "2026-11-04", kind: "visit", title: "IDEADED", place: "Viladecans", role: "talk" },
     { date: "2026-10", kind: "visit", title: "HSBC", place: { en: "London", ca: "Londres" }, role: "talk" },
