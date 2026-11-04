@@ -32,6 +32,11 @@
   const now = new Date();
   const nowKey = now.getFullYear() * 100 + (now.getMonth() + 1);
   const ymKey = (d) => { const { y, m } = parseYM(d); return y * 100 + m; };
+  // A full YYYY-MM-DD date counts as upcoming until that day; a bare YYYY-MM until that month.
+  const isUpcoming = (d) => {
+    const day = Number(d.split("-")[2]);
+    return day ? ymKey(d) * 100 + day > nowKey * 100 + now.getDate() : ymKey(d) > nowKey;
+  };
   const icon = (path, vb = "0 0 24 24") => { const svg = s("svg", { viewBox: vb, "aria-hidden": "true" }); svg.innerHTML = `<path d="${path}"/>`; return svg; };
 
   const ICONS = {
@@ -405,7 +410,7 @@
   const KIND_COLOR = { conference: "var(--blue)", workshop: "var(--green)", school: "var(--yellow)", visit: "#c77d9b", course: "var(--ink-faint)" };
   const actFilters = [
     { key: "all", label: T("acts.all"), test: () => true },
-    { key: "upcoming", label: T("acts.upcoming"), test: (a) => ymKey(a.date) > nowKey },
+    { key: "upcoming", label: T("acts.upcoming"), test: (a) => isUpcoming(a.date) },
     { key: "talk", label: T("acts.talks"), test: (a) => a.role === "talk" },
     { key: "poster", label: T("acts.posters"), test: (a) => a.role === "poster" },
     ...Object.keys(KIND_COLOR).map((k) => ({ key: k, label: T(`kinds.${k}`), test: (a) => a.kind === k }))
@@ -424,7 +429,7 @@
       h("div", { class: "act-year" },
         h("h3", {}, String(y)),
         h("ul", { class: "act-list" }, ...items.filter((a) => parseYM(a.date).y === y).map((a) => {
-          const upcoming = ymKey(a.date) > nowKey;
+          const upcoming = isUpcoming(a.date);
           return h("li", { class: `act${upcoming ? " is-upcoming" : ""}` },
             h("span", { class: "act-month" }, MONTHS[parseYM(a.date).m - 1]),
             h("div", {},

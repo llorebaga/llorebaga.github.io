@@ -50,7 +50,7 @@ A topic can also list `links: ["qc"]` to draw a connector to another topic circl
 
 ### Activities
 
-Dates are `"YYYY-MM"`. Anything dated after the current month is automatically tagged **Upcoming**,
+Dates are `"YYYY-MM"`, or `"YYYY-MM-DD"` for an event later in the current month. Anything still ahead is automatically tagged **Upcoming**,
 so there is no need to move entries between "future" and "past" by hand. Set `role` to `"talk"`,
 `"poster"` or `""`.
 
