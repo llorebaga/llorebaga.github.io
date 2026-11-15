@@ -36,7 +36,7 @@ Add an object to `publications`:
   map: [760, 300],                  // bubble position in the research map (omit to keep it off the map)
   links: { arxiv: "…", journal: "…", code: "…" },
   cite: { journal: "Physical Review A", volume: "112", number: "062612", doi: "…" }, // published papers only
-  plain: {                          // "Papers, in plain words" (omit to leave the paper out of that section)
+  plain: {                          // the plain-words story behind the paper's card in "Papers and preprints"
     hook: { en: "One-line question or idea", ca: "…" },
     text: { en: ["Short paragraph", "…"], ca: ["…", "…"] }
   },
@@ -44,7 +44,8 @@ Add an object to `publications`:
 }
 ```
 
-The drawing for each plain-words story is a small SVG function in
+Every paper is shown as an illustrated card in "Papers and preprints" (with filters and search); clicking
+it opens the plain-words story. The drawing for each card is a small SVG function in
 [`assets/js/illustrations.js`](assets/js/illustrations.js), keyed by the paper `id` (viewBox `0 0 320 200`,
 colours through the `.il-*` classes in `style.css` so it follows the dark theme). A paper without one gets a
 plain bubble. The co-author graph needs nothing: it is built from the `authors` lists.
@@ -80,8 +81,8 @@ index.html            page shell and section layout
 assets/css/style.css  styles (light + dark theme)
 assets/js/i18n.js     language detection and interface labels (en, ca)
 assets/js/data.js     all content
-assets/js/main.js     rendering, research map, plain-words stories, publication list and search, co-author graph
-assets/js/illustrations.js  one drawing per paper for "Papers, in plain words"
+assets/js/main.js     rendering, research map, paper cards with filters, search and stories, co-author graph
+assets/js/illustrations.js  one drawing per paper card in "Papers and preprints"
 assets/js/explain.js  the three interactive "Research, explained" simulations
 assets/img/           photo and favicon
 404.html              "page not found" page

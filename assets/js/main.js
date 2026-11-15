@@ -301,7 +301,7 @@
     { key: "published", label: T("pubs.published"), test: (p) => p.status === "published" }
   ];
   let pubFilter = "all", pubQuery = "";
-  const pubList = $("#pubs");
+  const pubList = $("#stories"), pubEmpty = $("#pubs-empty");
   const pubFilterBar = $("#pub-filters");
   pubFilterBar.append(...pubFilters.map((f) =>
     h("button", { class: "chip", type: "button", "data-key": f.key, "aria-pressed": String(f.key === pubFilter), onclick: () => setPubFilter(f.key) },
@@ -319,36 +319,39 @@
     renderPubs();
   }
   function setPubQuery(q) { pubQuery = q; pubSearch.value = q; renderPubs(); }
+  // One illustrated card per paper (newest first, as in data.js). The card opens the plain-words
+  // story; the row underneath keeps the quick links. Drawings come from illustrations.js.
+  const ILL = window.ILLUSTRATIONS || {};
+  const art = (p) => (ILL[p.id] || ILL._default)(p);
   function pubCard(p) {
-    return h("li", { class: "pub card", id: `pub-${p.id}` },
-      h("div", { class: `pub-badge ${p.status}${p.firstAuthor ? " first" : ""}`, "aria-hidden": "true" }, p.id),
-      h("div", {},
-        h("h3", {}, p.title),
-        h("p", { class: "authors" }, authorLine(p)),
-        h("div", { class: "meta" }, h("span", { class: "venue" }, `${tr(p.venue)} · ${fmtMonth(p.date)}`), tagsFor(p)),
-        h("div", { class: "links" },
-          p.plain ? h("button", { class: "link-btn accent", type: "button", onclick: () => openStory(p.id) }, icon(ICONS.book), T("story.short")) : null,
+    return h("li", { id: `pub-${p.id}` },
+      h("article", { class: "story-card card" },
+        h("a", { class: "story-open", href: `#story-${p.id}`, onclick: (e) => { e.preventDefault(); openStory(p.id); } },
+          h("div", { class: "story-art", html: art(p) }),
+          h("div", { class: "story-card-body" },
+            h("p", { class: "story-meta" },
+              h("span", { class: `mini-badge ${p.status}${p.firstAuthor ? " first" : ""}`, "aria-hidden": "true" }, p.id),
+              `${p.date.slice(0, 4)} · ${T(`tag.${p.status}`)}`),
+            h("h3", {}, p.title),
+            h("p", { class: "story-authors" }, authorLine(p)),
+            h("p", { class: "story-venue" }, tr(p.venue)),
+            p.plain ? h("p", { class: "story-hook" }, tr(p.plain.hook)) : null)),
+        h("div", { class: "story-actions links" },
           ...linkButtons(p),
-          p.map ? h("button", { class: "link-btn", type: "button", onclick: () => { select({ paper: p.id }); $("#research").scrollIntoView(); } }, icon(ICONS.target), T("pubs.onMap")) : null,
-          h("button", { class: "link-btn", type: "button", onclick: () => openCite(p.id) }, icon(ICONS.quote), T("pubs.cite"))),
-        h("details", {}, h("summary", {}, T("pubs.abstract")), h("p", { lang: "en" }, p.abstract))));
+          h("button", { class: "link-btn", type: "button", onclick: () => openCite(p.id) }, icon(ICONS.quote), T("pubs.cite")))));
   }
-  // Grouped by year, newest first (publications are listed newest first in data.js).
   function renderPubs() {
     const f = pubFilters.find((x) => x.key === pubFilter);
     const words = fold(pubQuery).split(/\s+/).filter(Boolean);
     const items = S.publications.filter((p) => f.test(p) && words.every((w) => haystack(p).includes(w)));
-    const years = [...new Set(items.map((p) => p.date.slice(0, 4)))];
-    pubList.replaceChildren(...years.map((y) =>
-      h("div", { class: "pub-year" },
-        h("h3", { class: "year-label" }, y),
-        h("ol", { class: "pubs" }, ...items.filter((p) => p.date.startsWith(y)).map(pubCard)))));
-    if (!items.length) pubList.append(h("p", { class: "pubs-empty" }, T("pubs.empty")));
+    pubList.replaceChildren(...items.map(pubCard));
+    pubEmpty.hidden = items.length > 0;
+    pubEmpty.textContent = T("pubs.empty");
   }
   function focusPub(id, instant = false) {
     if (!document.getElementById(`pub-${id}`)) { pubQuery = ""; pubSearch.value = ""; setPubFilter("all"); }
-    const card = document.getElementById(`pub-${id}`);
-    card.scrollIntoView({ block: "center", behavior: instant ? "instant" : "smooth" });
+    const li = document.getElementById(`pub-${id}`), card = li.querySelector(".story-card");
+    li.scrollIntoView({ block: "center", behavior: instant ? "instant" : "smooth" });
     card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
     setTimeout(() => card.classList.remove("flash"), 1800);
     history.replaceState(null, "", `#pub-${id}`);
@@ -404,21 +407,8 @@
   citeDialog.addEventListener("click", (e) => { if (e.target === citeDialog) citeDialog.close(); });
 
   // ---------- papers in plain words ----------
-  // Text lives in data.js (`plain` on each publication), drawings in illustrations.js.
-  const ILL = window.ILLUSTRATIONS || {};
-  const art = (p) => (ILL[p.id] || ILL._default)(p);
+  // The story reader behind each card. Text lives in data.js (`plain` on each publication).
   const storyPubs = S.publications.filter((p) => p.plain);
-  $("#stories").append(...storyPubs.map((p) =>
-    h("li", {},
-      h("a", { class: "story-card card", href: `#story-${p.id}`, onclick: (e) => { e.preventDefault(); openStory(p.id); } },
-        h("div", { class: "story-art", html: art(p) }),
-        h("div", { class: "story-card-body" },
-          h("p", { class: "story-meta" },
-            h("span", { class: `mini-badge ${p.status}${p.firstAuthor ? " first" : ""}`, "aria-hidden": "true" }, p.id),
-            `${p.date.slice(0, 4)} · ${T(`tag.${p.status}`)}`),
-          h("h3", {}, p.title),
-          h("p", { class: "story-hook" }, tr(p.plain.hook))))))
-  );
 
   const storyDialog = $("#story-dialog");
   let storyIdx = 0;
@@ -446,7 +436,6 @@
       h("div", { class: "links" },
         ...linkButtons(p),
         p.map ? h("button", { class: "link-btn", type: "button", onclick: go(() => { select({ paper: p.id }); $("#research").scrollIntoView(); }) }, icon(ICONS.target), T("pubs.onMap")) : null,
-        h("button", { class: "link-btn", type: "button", onclick: go(() => focusPub(p.id)) }, icon(ICONS.arrow), T("map.inList")),
         h("button", { class: "link-btn", type: "button", onclick: () => openCite(p.id) }, icon(ICONS.quote), T("pubs.cite"))),
       h("details", { class: "story-abstract" }, h("summary", {}, T("story.abstract")), h("p", { lang: "en" }, p.abstract)));
     $(".story-scroll").scrollTop = 0;
@@ -746,7 +735,7 @@
   syncTheme();
 
   if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    const els = document.querySelectorAll(".section-head, .map-wrap, .people-wrap, .intro-grid > *, .project, .stories > li, .pub-year, .act-year, .tl");
+    const els = document.querySelectorAll(".section-head, .map-wrap, .people-wrap, .intro-grid > *, .project, .stories > li, .act-year, .tl");
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
     }, { rootMargin: "0px 0px -8% 0px" });

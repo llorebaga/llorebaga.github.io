@@ -356,46 +356,8 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.2; marg
 /* ------------------------------------------------------------------
    Publications
 ------------------------------------------------------------------ */
-.pubs { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.pub-year { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 20px; padding: 18px 0; border-top: 1px solid var(--line); }
-.pub-year:first-child { border-top: 0; padding-top: 4px; }
-.year-label { font-size: 26px; color: var(--ink-faint); position: sticky; top: 84px; align-self: start; }
-@media (max-width: 760px) {
-  .pub-year { grid-template-columns: 1fr; gap: 8px; }
-  .year-label { position: static; font-size: 22px; }
-}
-.pub {
-  display: grid; grid-template-columns: 70px 1fr; gap: 20px; padding: 22px 24px;
-  scroll-margin-top: 90px; transition: border-color .3s, box-shadow .3s;
-}
-.pub.flash { border-color: var(--blue); box-shadow: 0 0 0 4px var(--blue-tint), var(--shadow); }
-.pub-badge {
-  width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center;
-  font: 700 12px var(--sans); letter-spacing: .03em; border: 2.5px solid var(--node-stroke);
-  background: var(--surface-2); color: var(--ink);
-}
-.pub-badge.published { background: var(--green); color: #fffefb; }
-.pub-badge.preprint { background: var(--yellow); color: #24323a; }
-.pub-badge.first { border-width: 4.5px; border-color: var(--node-stroke-strong); }
-.pub-badge.none { font-family: var(--serif); font-size: 16px; font-weight: 400; }
-.pub h3 { font-size: 19px; line-height: 1.4; }
-.pub .authors { margin: 6px 0 2px; font-size: 15px; color: var(--ink-soft); }
-.pub .authors strong { color: var(--ink); font-weight: 600; }
-.pub .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 14px; font-size: 14px; color: var(--ink-faint); }
-.pub .meta .venue { font-style: italic; margin-right: 4px; }
-.pub details { margin-top: 14px; }
-.pub summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--ink-soft); list-style: none; display: inline-flex; align-items: center; gap: 6px; }
-.pub summary::-webkit-details-marker { display: none; }
-.pub summary::before { content: "+"; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line); font-size: 13px; line-height: 1; }
-.pub details[open] summary::before { content: "−"; }
-.pub details p { margin: 10px 0 0; font-size: 15px; color: var(--ink-soft); max-width: 80ch; }
 .pubs-empty { padding: 24px 0; color: var(--ink-faint); }
 
-@media (max-width: 600px) {
-  .pub { grid-template-columns: 1fr; gap: 12px; padding: 18px; }
-  .pub-badge { width: 52px; height: 52px; font-size: 11px; }
-  .pub h3 { font-size: 17px; }
-}
 
 /* ------------------------------------------------------------------
    Activities
@@ -712,29 +674,29 @@ address { font-style: normal; color: var(--ink-soft); margin-top: 12px; font-siz
    Papers, in plain words
 ------------------------------------------------------------------ */
 .stories { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.stories > li { scroll-margin-top: 90px; }
 .story-card {
   display: flex; flex-direction: column; height: 100%; overflow: hidden;
-  color: var(--ink) !important; text-decoration: none !important;
   transition: transform .2s ease, border-color .2s, box-shadow .2s;
 }
 .story-card:hover { transform: translateY(-3px); border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-tint), var(--shadow); }
+.story-card.flash { border-color: var(--blue); box-shadow: 0 0 0 4px var(--blue-tint), var(--shadow); }
+.story-open { display: flex; flex-direction: column; flex: 1; color: var(--ink) !important; text-decoration: none !important; }
 .story-art { background: var(--surface-2); border-bottom: 1px solid var(--line); padding: 10px 14px 4px; }
-.story-card-body { padding: 16px 18px 20px; display: flex; flex-direction: column; gap: 8px; }
-.story-meta { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-faint); }
+.story-card-body { padding: 16px 18px 12px; display: flex; flex-direction: column; gap: 6px; }
+.story-meta { margin: 0 0 2px; display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-faint); }
 .story-card h3 { font-size: 17px; line-height: 1.35; }
-.story-hook { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-soft); }
+.story-authors { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); }
+.story-authors strong { color: var(--ink); font-weight: 600; }
+.story-venue { margin: 0; font-size: 13px; font-style: italic; color: var(--ink-faint); }
+.story-hook { margin: 4px 0 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-soft); }
+.story-actions { padding: 4px 18px 18px; gap: 6px; }
+.story-actions .link-btn { height: 30px; padding: 0 10px; font-size: 12.5px; }
+.pubs-empty[hidden] { display: none; }
+#pub-filters { margin-bottom: 22px; }
 @media (max-width: 1000px) { .stories { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-/* On phones the stories become a swipeable row. */
-@media (max-width: 640px) {
-  .stories {
-    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 16px 14px;
-    margin: 0 -16px; scrollbar-width: thin;
-  }
-  .stories > li { flex: 0 0 82%; scroll-snap-align: center; }
-}
+@media (max-width: 640px) { .stories { grid-template-columns: 1fr; gap: 14px; } }
 
-.pubs-block { margin-top: 64px; }
-.sub-head .section-title { font-size: clamp(24px, 3vw, 30px); }
 
 /* Search next to the filter chips */
 .pub-search {

@@ -559,8 +559,11 @@ window.SITE = {
 
   // CV timeline. end: null means "present".
   cv: [
-    { start: "2025-10", end: null, kind: "research",
-      title: { en: "Research stay in polynomial optimization", ca: "Estada de recerca en optimització polinòmica" },
+    { start: "2026-08", end: "2026-09", kind: "research",
+      title: { en: "PhD industrial secondment", ca: "Estada doctoral a la indústria" },
+      org: "HSBC", orgUrl: "https://www.hsbc.com/" },
+    { start: "2025-10", end: "2026-07", kind: "research",
+      title: { en: "PhD secondment", ca: "Estada doctoral" },
       org: { en: "LAAS-CNRS, Toulouse", ca: "LAAS-CNRS, Tolosa" }, orgUrl: "https://www.laas.fr/en/",
       group: { en: "POP group", ca: "Grup POP" }, groupUrl: "https://www.laas.fr/en/teams/pop/" },
     { start: "2024-10", end: null, kind: "research",
