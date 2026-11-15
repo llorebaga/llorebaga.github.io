@@ -11,7 +11,7 @@ Everything you'd want to edit lives in **[`assets/js/data.js`](assets/js/data.js
 | What | Where in `data.js` |
 | --- | --- |
 | Name, role, links, email, address | `person` (`links.cv` points to `assets/docs/`, `cvUpdated` sets the date next to the CV button) |
-| News items on the front page | `news` (link one to a paper with `paper: "ID"`) |
+| News items on the front page | `news`, newest first; only the first three are shown (link one to a paper with `paper: "ID"`) |
 | About / research text | `about`, `research` |
 | Papers | `publications` (newest first; published ones also get a `cite` block for BibTeX) |
 | "Research, explained" texts | `explainers` (the simulations themselves are in `assets/js/explain.js`) |

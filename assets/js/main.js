@@ -76,7 +76,8 @@
   );
 
   // ---------- news & about ----------
-  $("#news").append(...S.news.map((n) =>
+  // Only the three newest updates are shown; older ones stay in data.js.
+  $("#news").append(...S.news.slice(0, 3).map((n) =>
     h("li", {},
       h("span", { class: "news-date" }, fmtMonth(n.date)),
       h("p", {},

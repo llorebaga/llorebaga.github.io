@@ -51,6 +51,9 @@ window.SITE = {
   },
 
   news: [
+    { date: "2026-11", paper: "LR2Q", text: {
+      en: "Published in APS Open Science: <em>Low-rank geometry of two-qubit gates</em>.",
+      ca: "Publicat a APS Open Science: <em>Low-rank geometry of two-qubit gates</em>." } },
     { date: "2026-10", paper: "MSD", text: {
       en: "New preprint with Jakub Mareček: <em>The limits of magic-state distillation</em>.",
       ca: "Nou preprint amb Jakub Mareček: <em>The limits of magic-state distillation</em>." } },
@@ -117,6 +120,20 @@ window.SITE = {
    */
   publications: [
     {
+      id: "LR2Q",
+      title: "Low-rank geometry of two-qubit gates",
+      authors: ["Llorenç Balada Gaggioli"],
+      venue: "APS Open Science 1, 000206",
+      date: "2026-11-05",
+      status: "published",
+      firstAuthor: true,
+      topics: ["qc", "lr"],
+      map: [795, 295],
+      links: { journal: "https://doi.org/10.1103/nrx9-9p92", code: "https://github.com/llorebaga/LR_2qubit" },
+      cite: { journal: "APS Open Science", volume: "1", number: "000206", doi: "10.1103/nrx9-9p92" },
+      abstract: "We present a framework based on the determinantal geometry of two-qubit gates. Combining the Weyl chamber representation with operator Schmidt theory, we interpret gate synthesis as a distance problem to determinantal varieties. This gives an operational geometry to the Weyl chamber, quantifying nonlocal complexity. We show that the square root iSWAP gate is the closest perfect entangler to the variety of local operations, and that no perfect entangler can be approximated by a local gate with average gate fidelity above 79.8%. The three different determinantal costs form a synthesis-adapted coordinate system that encodes nonlocal complexity and generally reconstructs the Weyl chamber."
+    },
+    {
       id: "MSD",
       title: "The limits of magic-state distillation",
       authors: ["Llorenç Balada Gaggioli", "Jakub Mareček"],
@@ -167,19 +184,6 @@ window.SITE = {
       map: [600, 610],
       links: { arxiv: "https://arxiv.org/abs/2604.17563", code: "https://github.com/llorebaga/SLPOP" },
       abstract: "We study polynomial optimization problems whose objective has a composition or tensor train structure. These polynomials can be evaluated as a sequence of maps, giving rise to intermediate variables (“states”) of dimension lower than the ambient dimension. Structures like these arise naturally in dynamical systems, Markov chains, and neural networks. We develop two moment-SOS (sums of squares) hierarchies that exploit this composition structure in different ways. The first one, termed state-lifting chordal, is based on the correlative sparsity graph of the problem. The second one, termed state-lifting push-forward, encodes the structure at the level of the measures directly. Numerical experiments demonstrate that the proposed methods can compute certified bounds for problems with hundreds or even a thousand variables. To illustrate the versatility of the hierarchies we apply them to Markov chain optimization, quantum optimal control, and neural networks."
-    },
-    {
-      id: "LR2Q",
-      title: "Low-rank geometry of two-qubit gates",
-      authors: ["Llorenç Balada Gaggioli"],
-      venue: { en: "arXiv preprint", ca: "Preprint a arXiv" },
-      date: "2026-04-16",
-      status: "preprint",
-      firstAuthor: true,
-      topics: ["qc", "lr"],
-      map: [795, 295],
-      links: { arxiv: "https://arxiv.org/abs/2604.15102", code: "https://github.com/llorebaga/LR_2qubit" },
-      abstract: "We present a framework based on the determinantal geometry of two-qubit gates. Combining the Weyl chamber representation with operator Schmidt theory, we interpret gate synthesis as a distance problem to determinantal varieties. This gives an operational geometry to the Weyl chamber, quantifying nonlocal complexity. We show that the square root iSWAP gate is the closest perfect entangler to the variety of local operations, and that no perfect entangler can be approximated by a local gate with average gate fidelity above 79.8%. The three different determinantal costs form a synthesis-adapted coordinate system that encodes nonlocal complexity and generally reconstructs the Weyl chamber."
     },
     {
       id: "RSE",
