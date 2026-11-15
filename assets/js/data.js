@@ -559,7 +559,7 @@ window.SITE = {
 
   // CV timeline. end: null means "present".
   cv: [
-    { start: "2026-08", end: "2026-09", kind: "research",
+    { start: "2026-09", end: "2026-10", kind: "research",
       title: { en: "PhD industrial secondment", ca: "Estada doctoral a la indústria" },
       org: "HSBC", orgUrl: "https://www.hsbc.com/" },
     { start: "2025-10", end: "2026-07", kind: "research",
