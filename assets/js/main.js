@@ -37,6 +37,8 @@
     const day = Number(d.split("-")[2]);
     return day ? ymKey(d) * 100 + day > nowKey * 100 + now.getDate() : ymKey(d) > nowKey;
   };
+  // Lower-case without accents, for search.
+  const fold = (str) => String(str).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l").toLowerCase();
   const icon = (path, vb = "0 0 24 24") => { const svg = s("svg", { viewBox: vb, "aria-hidden": "true" }); svg.innerHTML = `<path d="${path}"/>`; return svg; };
 
   const ICONS = {
@@ -49,7 +51,12 @@
     arrow: "M6.4 18.3 5 16.9l9.6-9.6H8v-2h10v10h-2V8.7l-9.6 9.6Z",
     target: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z",
     cursor: "M5 3l14 7-6 2-2 6L5 3Z",
-    quote: "M4 11.5C4 7.9 6.2 5.3 9.6 4.5l.6 1.7C8.3 6.9 7.3 8.3 7.2 10H10v7H4v-5.5Zm10 0c0-3.6 2.2-6.2 5.6-7l.6 1.7c-1.9.7-2.9 2.1-3 3.8H20v7h-6v-5.5Z"
+    quote: "M4 11.5C4 7.9 6.2 5.3 9.6 4.5l.6 1.7C8.3 6.9 7.3 8.3 7.2 10H10v7H4v-5.5Zm10 0c0-3.6 2.2-6.2 5.6-7l.6 1.7c-1.9.7-2.9 2.1-3 3.8H20v7h-6v-5.5Z",
+    book: "M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5a.5.5 0 0 0 0 1H20v3H6.5A2.5 2.5 0 0 1 4 19.5v-15ZM8 6v2h8V6H8Zm0 4v2h6v-2H8Z",
+    search: "M10.5 3a7.5 7.5 0 0 1 5.9 12.1l4.3 4.3-1.4 1.4-4.3-4.3A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z",
+    left: "M15.4 5.4 14 4l-8 8 8 8 1.4-1.4L8.8 12l6.6-6.6Z",
+    right: "M8.6 18.6 10 20l8-8-8-8-1.4 1.4 6.6 6.6-6.6 6.6Z",
+    up: "M12 4l8 8-1.4 1.4L13 7.8V20h-2V7.8l-5.6 5.6L4 12l8-8Z"
   };
 
   const P = S.person;
@@ -77,14 +84,17 @@
 
   // ---------- news & about ----------
   // Only the three newest updates are shown; older ones stay in data.js.
-  $("#news").append(...S.news.slice(0, 3).map((n) =>
-    h("li", {},
-      h("span", { class: "news-date" }, fmtMonth(n.date)),
-      h("p", {},
-        h("span", { html: tr(n.text) }),
-        n.paper ? h("a", { class: "paper-link", href: `#pub-${n.paper}`, onclick: (e) => { e.preventDefault(); focusPub(n.paper); } }, T("news.read")) : null)
-    )
-  ));
+  // The bubble repeats the paper's map bubble, coloured by the kind of update.
+  $("#news").append(...S.news.slice(0, 3).map((n) => {
+    const p = n.paper && pubById[n.paper];
+    const kind = n.kind || (p ? p.status : "");
+    return h("li", { class: "news-item" },
+      h("span", { class: `news-bubble ${kind}${p && p.firstAuthor ? " first" : ""}`, "aria-hidden": "true" }, p ? p.id : ""),
+      h("div", {},
+        h("p", { class: "news-date" }, fmtMonth(n.date)),
+        h("p", { class: "news-text", html: tr(n.text) }),
+        p ? h("a", { class: "paper-link", href: `#story-${p.id}`, onclick: (e) => { e.preventDefault(); openStory(p.id); } }, T("news.read")) : null));
+  }));
   $("#about").append(...tr(S.about).map((t) => h("p", { html: t })));
   $("#research-text").innerHTML = tr(S.research);
 
@@ -231,8 +241,10 @@
         h("h3", {}, p.title),
         h("p", { class: "authors" }, authorLine(p)),
         h("p", { class: "venue" }, `${tr(p.venue)} · ${fmtMonth(p.date)}`),
-        h("p", { class: "snippet", lang: "en" }, snippet(p.abstract))),
-      h("div", { class: "links" }, ...linkButtons(p),
+        h("p", { class: "snippet" }, p.plain ? tr(p.plain.hook) : h("span", { lang: "en" }, snippet(p.abstract)))),
+      h("div", { class: "links" },
+        p.plain ? h("button", { class: "link-btn accent", type: "button", onclick: () => openStory(p.id) }, icon(ICONS.book), T("story.short")) : null,
+        ...linkButtons(p),
         h("a", { class: "link-btn", href: `#pub-${p.id}`, onclick: (e) => { e.preventDefault(); focusPub(p.id); } }, icon(ICONS.arrow), T("map.inList")))
     );
   }
@@ -262,7 +274,7 @@
   function select(state) { selected = state; restore(); }
   map.addEventListener("click", (e) => { if (e.target === map) select(null); });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && selected && !$("#cite-dialog").open) select(null);
+    if (e.key === "Escape" && selected && !document.querySelector("dialog[open]")) select(null);
   });
   panelDefault();
 
@@ -288,37 +300,53 @@
     { key: "first", label: T("pubs.first"), test: (p) => p.firstAuthor },
     { key: "published", label: T("pubs.published"), test: (p) => p.status === "published" }
   ];
-  let pubFilter = "all";
+  let pubFilter = "all", pubQuery = "";
   const pubList = $("#pubs");
   const pubFilterBar = $("#pub-filters");
   pubFilterBar.append(...pubFilters.map((f) =>
     h("button", { class: "chip", type: "button", "data-key": f.key, "aria-pressed": String(f.key === pubFilter), onclick: () => setPubFilter(f.key) },
       f.label, h("span", { class: "n" }, String(S.publications.filter(f.test).length)))
   ));
+  const pubSearch = h("input", {
+    class: "pub-search-input", type: "search", placeholder: T("pubs.search"), "aria-label": T("pubs.search"),
+    oninput: (e) => { pubQuery = e.target.value; renderPubs(); }
+  });
+  pubFilterBar.append(h("label", { class: "pub-search" }, icon(ICONS.search), pubSearch));
+  const haystack = (p) => fold([p.id, p.title, p.authors.join(" "), tr(p.venue), p.date.slice(0, 4), p.abstract, p.plain ? tr(p.plain.hook) : ""].join(" "));
   function setPubFilter(key) {
     pubFilter = key;
     pubFilterBar.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.key === key)));
     renderPubs();
   }
+  function setPubQuery(q) { pubQuery = q; pubSearch.value = q; renderPubs(); }
+  function pubCard(p) {
+    return h("li", { class: "pub card", id: `pub-${p.id}` },
+      h("div", { class: `pub-badge ${p.status}${p.firstAuthor ? " first" : ""}`, "aria-hidden": "true" }, p.id),
+      h("div", {},
+        h("h3", {}, p.title),
+        h("p", { class: "authors" }, authorLine(p)),
+        h("div", { class: "meta" }, h("span", { class: "venue" }, `${tr(p.venue)} · ${fmtMonth(p.date)}`), tagsFor(p)),
+        h("div", { class: "links" },
+          p.plain ? h("button", { class: "link-btn accent", type: "button", onclick: () => openStory(p.id) }, icon(ICONS.book), T("story.short")) : null,
+          ...linkButtons(p),
+          p.map ? h("button", { class: "link-btn", type: "button", onclick: () => { select({ paper: p.id }); $("#research").scrollIntoView(); } }, icon(ICONS.target), T("pubs.onMap")) : null,
+          h("button", { class: "link-btn", type: "button", onclick: () => openCite(p.id) }, icon(ICONS.quote), T("pubs.cite"))),
+        h("details", {}, h("summary", {}, T("pubs.abstract")), h("p", { lang: "en" }, p.abstract))));
+  }
+  // Grouped by year, newest first (publications are listed newest first in data.js).
   function renderPubs() {
     const f = pubFilters.find((x) => x.key === pubFilter);
-    const items = S.publications.filter(f.test);
-    pubList.replaceChildren(...items.map((p) =>
-      h("li", { class: "pub card", id: `pub-${p.id}` },
-        h("div", { class: `pub-badge ${p.status}${p.firstAuthor ? " first" : ""}`, "aria-hidden": "true" }, p.id),
-        h("div", {},
-          h("h3", {}, p.title),
-          h("p", { class: "authors" }, authorLine(p)),
-          h("div", { class: "meta" }, h("span", { class: "venue" }, `${tr(p.venue)} · ${fmtMonth(p.date)}`), tagsFor(p)),
-          h("div", { class: "links" }, ...linkButtons(p),
-            p.map ? h("button", { class: "link-btn", type: "button", onclick: () => { select({ paper: p.id }); $("#research").scrollIntoView(); } }, icon(ICONS.target), T("pubs.onMap")) : null,
-            h("button", { class: "link-btn", type: "button", onclick: () => openCite(p.id) }, icon(ICONS.quote), T("pubs.cite"))),
-          h("details", {}, h("summary", {}, T("pubs.abstract")), h("p", { lang: "en" }, p.abstract))))
-    ));
-    if (!items.length) pubList.append(h("li", { class: "pubs-empty" }, T("pubs.empty")));
+    const words = fold(pubQuery).split(/\s+/).filter(Boolean);
+    const items = S.publications.filter((p) => f.test(p) && words.every((w) => haystack(p).includes(w)));
+    const years = [...new Set(items.map((p) => p.date.slice(0, 4)))];
+    pubList.replaceChildren(...years.map((y) =>
+      h("div", { class: "pub-year" },
+        h("h3", { class: "year-label" }, y),
+        h("ol", { class: "pubs" }, ...items.filter((p) => p.date.startsWith(y)).map(pubCard)))));
+    if (!items.length) pubList.append(h("p", { class: "pubs-empty" }, T("pubs.empty")));
   }
   function focusPub(id, instant = false) {
-    if (!pubFilters.find((f) => f.key === pubFilter).test(pubById[id])) setPubFilter("all");
+    if (!document.getElementById(`pub-${id}`)) { pubQuery = ""; pubSearch.value = ""; setPubFilter("all"); }
     const card = document.getElementById(`pub-${id}`);
     card.scrollIntoView({ block: "center", behavior: instant ? "instant" : "smooth" });
     card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
@@ -374,6 +402,192 @@
   $("#cite-copy").addEventListener("click", (e) => copyText($("#cite-bib").textContent, e.currentTarget, T("cite.copied")));
   $("#cite-link").addEventListener("click", (e) => copyText(`${location.origin}${location.pathname}${I18N.lang === "en" ? "" : `?lang=${I18N.lang}`}#pub-${citing.id}`, e.currentTarget, T("cite.linkCopied")));
   citeDialog.addEventListener("click", (e) => { if (e.target === citeDialog) citeDialog.close(); });
+
+  // ---------- papers in plain words ----------
+  // Text lives in data.js (`plain` on each publication), drawings in illustrations.js.
+  const ILL = window.ILLUSTRATIONS || {};
+  const art = (p) => (ILL[p.id] || ILL._default)(p);
+  const storyPubs = S.publications.filter((p) => p.plain);
+  $("#stories").append(...storyPubs.map((p) =>
+    h("li", {},
+      h("a", { class: "story-card card", href: `#story-${p.id}`, onclick: (e) => { e.preventDefault(); openStory(p.id); } },
+        h("div", { class: "story-art", html: art(p) }),
+        h("div", { class: "story-card-body" },
+          h("p", { class: "story-meta" },
+            h("span", { class: `mini-badge ${p.status}${p.firstAuthor ? " first" : ""}`, "aria-hidden": "true" }, p.id),
+            `${p.date.slice(0, 4)} · ${T(`tag.${p.status}`)}`),
+          h("h3", {}, p.title),
+          h("p", { class: "story-hook" }, tr(p.plain.hook))))))
+  );
+
+  const storyDialog = $("#story-dialog");
+  let storyIdx = 0;
+  function openStory(id) {
+    const p = pubById[id];
+    if (!p || !p.plain) { focusPub(id); return; }
+    storyIdx = storyPubs.indexOf(p);
+    renderStory();
+    if (!storyDialog.open) storyDialog.showModal();
+    history.replaceState(null, "", `#story-${id}`);
+  }
+  function renderStory() {
+    const p = storyPubs[storyIdx];
+    const go = (fn) => () => { storyDialog.close(); fn(); };
+    $("#story-art").innerHTML = art(p);
+    $("#story-count").textContent = T("story.count", { i: storyIdx + 1, n: storyPubs.length });
+    $("#story-body").replaceChildren(
+      h("p", { class: "kicker" }, T("story.kicker")),
+      h("h2", { id: "story-title" }, p.title),
+      h("p", { class: "authors" }, authorLine(p)),
+      h("p", { class: "venue" }, `${tr(p.venue)} · ${fmtMonth(p.date)}`),
+      h("div", { class: "tagrow" }, tagsFor(p)),
+      h("p", { class: "story-lead" }, tr(p.plain.hook)),
+      ...tr(p.plain.text).map((t) => h("p", {}, t)),
+      h("div", { class: "links" },
+        ...linkButtons(p),
+        p.map ? h("button", { class: "link-btn", type: "button", onclick: go(() => { select({ paper: p.id }); $("#research").scrollIntoView(); }) }, icon(ICONS.target), T("pubs.onMap")) : null,
+        h("button", { class: "link-btn", type: "button", onclick: go(() => focusPub(p.id)) }, icon(ICONS.arrow), T("map.inList")),
+        h("button", { class: "link-btn", type: "button", onclick: () => openCite(p.id) }, icon(ICONS.quote), T("pubs.cite"))),
+      h("details", { class: "story-abstract" }, h("summary", {}, T("story.abstract")), h("p", { lang: "en" }, p.abstract)));
+    $(".story-scroll").scrollTop = 0;
+  }
+  function stepStory(d) {
+    storyIdx = (storyIdx + d + storyPubs.length) % storyPubs.length;
+    renderStory();
+    history.replaceState(null, "", `#story-${storyPubs[storyIdx].id}`);
+  }
+  $("#story-prev").append(icon(ICONS.left));
+  $("#story-next").append(icon(ICONS.right));
+  $("#story-prev").addEventListener("click", () => stepStory(-1));
+  $("#story-next").addEventListener("click", () => stepStory(1));
+  storyDialog.addEventListener("keydown", (e) => {
+    if (citeDialog.open || e.target.closest("summary, a, input")) return;
+    if (e.key === "ArrowLeft") { e.preventDefault(); stepStory(-1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); stepStory(1); }
+  });
+  storyDialog.addEventListener("click", (e) => { if (e.target === storyDialog) storyDialog.close(); });
+  storyDialog.addEventListener("close", () => {
+    if (location.hash.startsWith("#story-")) history.replaceState(null, "", location.pathname + location.search);
+  });
+
+  // ---------- co-authors ----------
+  // Built from the author lists. People are placed clockwise in the order I first wrote with them.
+  const PC = [400, 300], PR = 226, ME_R = 46;
+  const people = new Map();
+  [...S.publications].reverse().forEach((p) => p.authors.forEach((a) => {
+    if (byMe(a)) return;
+    if (!people.has(a)) people.set(a, { name: a, papers: [] });
+    people.get(a).papers.unshift(p.id); // newest first
+  }));
+  const crew = [...people.values()];
+  crew.forEach((q, i) => {
+    q.angle = -Math.PI / 2 + (i * 2 * Math.PI) / crew.length;
+    q.x = PC[0] + PR * Math.cos(q.angle);
+    q.y = PC[1] + PR * Math.sin(q.angle);
+    q.r = Math.min(32, 13 + 5 * (q.papers.length - 1));
+    const w = q.name.split(" ");
+    q.initials = (w[0][0] + w[w.length - 1][0]).toUpperCase();
+  });
+  const pairs = new Map(); // "a|b" -> shared paper ids
+  S.publications.forEach((p) => {
+    const others = p.authors.filter((a) => !byMe(a));
+    others.forEach((a, i) => others.slice(i + 1).forEach((b) => {
+      const key = [a, b].sort().join("|");
+      if (!pairs.has(key)) pairs.set(key, []);
+      pairs.get(key).push(p.id);
+    }));
+  });
+
+  const graph = $("#people-graph");
+  const pplNodes = []; // {node, names:Set}
+  const regP = (node, names) => { pplNodes.push({ node, names: new Set(names) }); return node; };
+  const gChords = s("g"), gSpokes = s("g"), gPeople = s("g"), gLabels = s("g");
+  for (const [key, ids] of pairs) {
+    const [a, b] = key.split("|").map((n) => people.get(n));
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    const cx = PC[0] + (mx - PC[0]) * 0.35, cy = PC[1] + (my - PC[1]) * 0.35;
+    gChords.append(regP(s("path", { class: "pp-chord", d: `M${a.x} ${a.y} Q${cx} ${cy} ${b.x} ${b.y}`, "stroke-width": 1 + (ids.length - 1) }), [a.name, b.name]));
+  }
+  crew.forEach((q) => {
+    const ux = Math.cos(q.angle), uy = Math.sin(q.angle), n = q.papers.length;
+    gSpokes.append(regP(s("line", {
+      class: "pp-spoke", x1: PC[0] + ux * ME_R, y1: PC[1] + uy * ME_R, x2: q.x - ux * q.r, y2: q.y - uy * q.r, "stroke-width": 1.4 + 1.8 * (n - 1)
+    }), [q.name]));
+    const g = regP(s("g", { class: "pp-node", tabindex: 0, role: "button", "data-name": q.name, "aria-label": `${q.name}: ${n === 1 ? T("people.one") : T("people.count", { n })}` },
+      s("circle", { cx: q.x, cy: q.y, r: q.r }),
+      s("text", { class: "pp-initials", x: q.x, y: q.y }, q.initials)), [q.name]);
+    g.addEventListener("mouseenter", () => previewP(q.name));
+    g.addEventListener("mouseleave", restoreP);
+    g.addEventListener("click", (e) => { e.stopPropagation(); selectP(q.name); });
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectP(q.name); } });
+    gPeople.append(g);
+    const lr = PR + q.r + 10, lx = PC[0] + lr * ux, ly = PC[1] + lr * uy;
+    const anchor = ux > 0.08 ? "start" : ux < -0.08 ? "end" : "middle";
+    const dy = Math.abs(ux) <= 0.08 ? (uy < 0 ? -4 : 14) : Math.abs(ux) < 0.5 ? (uy < 0 ? -2 : 10) : 5;
+    gLabels.append(regP(s("text", { class: "pp-label", x: lx, y: ly + dy, "text-anchor": anchor }, q.name), [q.name]));
+  });
+  const meClip = s("clipPath", { id: "pp-me-clip" }, s("circle", { cx: PC[0], cy: PC[1], r: ME_R - 3 }));
+  const meNode = s("g", { class: "pp-me" },
+    s("circle", { cx: PC[0], cy: PC[1], r: ME_R }),
+    s("image", { href: P.photo, x: PC[0] - ME_R, y: PC[1] - ME_R, width: ME_R * 2, height: ME_R * 2, preserveAspectRatio: "xMidYMid slice", "clip-path": "url(#pp-me-clip)" }));
+  graph.append(s("defs", {}, meClip), gChords, gSpokes, gPeople, gLabels, meNode);
+  // Phones hide the names (the list beside the graph has them), so crop the empty margin around the ring.
+  const narrow = window.matchMedia("(max-width: 560px)");
+  const fitGraph = () => graph.setAttribute("viewBox", narrow.matches ? "136 36 528 528" : "0 0 800 600");
+  narrow.addEventListener("change", fitGraph);
+  fitGraph();
+
+  let pSelected = null;
+  function highlightP(name) {
+    graph.classList.toggle("dimmed", !!name);
+    pplNodes.forEach(({ node, names }) => {
+      node.classList.remove("near");
+      node.classList.toggle("lit", !!name && names.has(name));
+      node.classList.toggle("active", !!name && node.dataset && node.dataset.name === name);
+    });
+    // Light the co-authors who share a paper with the selected person too.
+    if (name) for (const [key] of pairs) {
+      const [a, b] = key.split("|");
+      if (a !== name && b !== name) continue;
+      const other = a === name ? b : a;
+      pplNodes.forEach(({ node, names }) => { if (names.size === 1 && names.has(other) && !node.classList.contains("pp-spoke")) node.classList.add("lit", "near"); });
+    }
+  }
+  const pPanel = $("#people-panel");
+  const paperRow = (id) => {
+    const p = pubById[id];
+    return h("li", {}, h("button", { type: "button", onclick: () => openStory(id) },
+      h("span", { class: `mini-badge ${p.status}${p.firstAuthor ? " first" : ""}`, "aria-hidden": "true" }, p.id),
+      h("span", {}, p.title)));
+  };
+  function pPanelDefault() {
+    const sorted = [...crew].sort((a, b) => b.papers.length - a.papers.length || a.name.localeCompare(b.name));
+    const joint = S.publications.filter((p) => p.authors.length > 1).length;
+    pPanel.replaceChildren(
+      h("p", { class: "people-summary" }, T("people.summary", { p: crew.length, n: joint })),
+      h("p", { class: "panel-hint" }, icon(ICONS.cursor), T("people.hint")),
+      h("ul", { class: "people-chips" }, ...sorted.map((q) =>
+        h("li", {}, h("button", { class: "chip", type: "button", onclick: () => selectP(q.name), onmouseenter: () => highlightP(q.name), onmouseleave: () => highlightP(pSelected) },
+          q.name, h("span", { class: "n" }, String(q.papers.length)))))));
+  }
+  function pPanelPerson(name) {
+    const q = people.get(name), n = q.papers.length;
+    pPanel.replaceChildren(
+      h("button", { class: "panel-back", type: "button", onclick: () => selectP(null) }, T("people.back")),
+      h("div", { class: "panel-paper" },
+        h("p", { class: "kicker" }, T("people.kicker")),
+        h("h3", {}, name),
+        h("p", { class: "venue", style: "margin-top:6px" }, n === 1 ? T("people.one") : T("people.count", { n }))),
+      h("ul", { class: "people-papers" }, ...q.papers.map(paperRow)),
+      h("div", { class: "links" },
+        h("button", { class: "link-btn", type: "button", onclick: () => { setPubFilter("all"); setPubQuery(name); $("#publications").scrollIntoView(); } }, icon(ICONS.arrow), T("people.inList"))));
+  }
+  function renderP(name) { name ? pPanelPerson(name) : pPanelDefault(); }
+  function previewP(name) { highlightP(name); renderP(name); }
+  function restoreP() { highlightP(pSelected); renderP(pSelected); }
+  function selectP(name) { pSelected = name; restoreP(); }
+  graph.addEventListener("click", (e) => { if (!e.target.closest(".pp-node")) selectP(null); });
+  pPanelDefault();
 
   // ---------- projects ----------
   (S.projects || []).forEach((pr) => {
@@ -445,8 +659,9 @@
   renderActs();
 
   // Shared links like /#pub-UGS open with that paper highlighted.
-  const deep = location.hash.match(/^#pub-(.+)$/);
-  if (deep && pubById[deep[1]]) setTimeout(() => focusPub(deep[1], true), 300);
+  // ...and /#story-UGS opens its plain-words story.
+  const deep = location.hash.match(/^#(pub|story)-(.+)$/);
+  if (deep && pubById[deep[2]]) setTimeout(() => (deep[1] === "story" ? openStory(deep[2]) : focusPub(deep[2], true)), 300);
 
   // ---------- CV ----------
   $("#cv-link").href = P.links.cv;
@@ -490,7 +705,12 @@
 
   // ---------- chrome: nav, theme, reveal ----------
   const topbar = $(".topbar");
-  const onScroll = () => topbar.classList.toggle("scrolled", window.scrollY > 8);
+  const toTop = $("#to-top");
+  toTop.append(icon(ICONS.up));
+  const onScroll = () => {
+    topbar.classList.toggle("scrolled", window.scrollY > 8);
+    toTop.classList.toggle("show", window.scrollY > 900);
+  };
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
@@ -526,7 +746,7 @@
   syncTheme();
 
   if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    const els = document.querySelectorAll(".section-head, .map-wrap, .intro-grid > *, .project, .pub, .act-year, .tl");
+    const els = document.querySelectorAll(".section-head, .map-wrap, .people-wrap, .intro-grid > *, .project, .stories > li, .pub-year, .act-year, .tl");
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
     }, { rootMargin: "0px 0px -8% 0px" });

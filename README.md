@@ -11,7 +11,7 @@ Everything you'd want to edit lives in **[`assets/js/data.js`](assets/js/data.js
 | What | Where in `data.js` |
 | --- | --- |
 | Name, role, links, email, address | `person` (`links.cv` points to `assets/docs/`, `cvUpdated` sets the date next to the CV button) |
-| News items on the front page | `news`, newest first; only the first three are shown (link one to a paper with `paper: "ID"`) |
+| News items on the front page | `news`, newest first; only the first three are shown (link one to a paper with `paper: "ID"`; `kind: "published"` or `"preprint"` colours its bubble) |
 | About / research text | `about`, `research` |
 | Papers | `publications` (newest first; published ones also get a `cite` block for BibTeX) |
 | "Research, explained" texts | `explainers` (the simulations themselves are in `assets/js/explain.js`) |
@@ -36,9 +36,18 @@ Add an object to `publications`:
   map: [760, 300],                  // bubble position in the research map (omit to keep it off the map)
   links: { arxiv: "…", journal: "…", code: "…" },
   cite: { journal: "Physical Review A", volume: "112", number: "062612", doi: "…" }, // published papers only
+  plain: {                          // "Papers, in plain words" (omit to leave the paper out of that section)
+    hook: { en: "One-line question or idea", ca: "…" },
+    text: { en: ["Short paragraph", "…"], ca: ["…", "…"] }
+  },
   abstract: "…"
 }
 ```
+
+The drawing for each plain-words story is a small SVG function in
+[`assets/js/illustrations.js`](assets/js/illustrations.js), keyed by the paper `id` (viewBox `0 0 320 200`,
+colours through the `.il-*` classes in `style.css` so it follows the dark theme). A paper without one gets a
+plain bubble. The co-author graph needs nothing: it is built from the `authors` lists.
 
 Map coordinates use the SVG viewBox `140 40 840 680`. The overlap clusters are centred at
 Quantum Control + Polynomial Optimization `(350, 330)`, Quantum Control + Low-rank `(770, 330)`,
@@ -71,7 +80,8 @@ index.html            page shell and section layout
 assets/css/style.css  styles (light + dark theme)
 assets/js/i18n.js     language detection and interface labels (en, ca)
 assets/js/data.js     all content
-assets/js/main.js     rendering, research map, filters
+assets/js/main.js     rendering, research map, plain-words stories, publication list and search, co-author graph
+assets/js/illustrations.js  one drawing per paper for "Papers, in plain words"
 assets/js/explain.js  the three interactive "Research, explained" simulations
 assets/img/           photo and favicon
 404.html              "page not found" page

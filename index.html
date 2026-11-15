@@ -20,12 +20,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=16">
+  <link rel="stylesheet" href="assets/css/style.css?v=19">
   <script>
     // Apply the saved theme before first paint to avoid a flash.
     try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
   </script>
-  <script src="assets/js/i18n.js?v=16"></script>
+  <script src="assets/js/i18n.js?v=19"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -59,7 +59,8 @@
       </a>
       <ul id="nav-links" class="nav-links">
         <li><a href="#research" data-i18n="nav.research">Research</a></li>
-        <li><a href="#publications" data-i18n="nav.publications">Publications</a></li>
+        <li><a href="#papers" data-i18n="nav.papers">Papers</a></li>
+        <li><a href="#people" data-i18n="nav.people">Co-authors</a></li>
         <li><a href="#activities" data-i18n="nav.activities">Activities</a></li>
         <li><a href="#cv" data-i18n="nav.cv">CV</a></li>
         <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
@@ -100,6 +101,7 @@
       <div class="card news">
         <h2 class="card-title" data-i18n="news.title">Latest news</h2>
         <ul class="news-list" id="news"></ul>
+        <a class="news-all" href="#papers"><span data-i18n="news.all">All papers</span> →</a>
       </div>
       <div class="about">
         <h2 class="section-title small" data-i18n="about.title">About me</h2>
@@ -129,7 +131,7 @@
     </section>
 
     <!-- Research, explained -->
-    <section id="explained" class="section container">
+    <section id="explained" class="section container band">
       <header class="section-head">
         <p class="kicker" data-i18n="explained.kicker">Research, explained</p>
         <h2 class="section-title" data-i18n="explained.title">What I work on, in three experiments</h2>
@@ -144,14 +146,38 @@
       <div id="projects-list"></div>
     </section>
 
-    <!-- Publications -->
-    <section id="publications" class="section container">
+    <!-- Papers: plain-words stories, then the full list -->
+    <section id="papers" class="section container">
       <header class="section-head">
-        <p class="kicker" data-i18n="pubs.kicker">Publications</p>
-        <h2 class="section-title" data-i18n="pubs.title">Papers &amp; preprints</h2>
+        <p class="kicker" data-i18n="stories.kicker">Papers, in plain words</p>
+        <h2 class="section-title" data-i18n="stories.title">What each paper is about</h2>
+        <p class="lead" data-i18n="stories.lead">A short explanation without jargon and a drawing for every paper. Pick one to read it.</p>
       </header>
-      <div class="filters" id="pub-filters" role="toolbar" data-i18n-attr="aria-label:pubs.filterAria" aria-label="Filter publications"></div>
-      <ol class="pubs" id="pubs"></ol>
+      <ul class="stories" id="stories" data-i18n-attr="aria-label:stories.aria" aria-label="Papers in plain words"></ul>
+
+      <div id="publications" class="pubs-block">
+        <header class="section-head sub-head">
+          <p class="kicker" data-i18n="pubs.kicker">Publications</p>
+          <h2 class="section-title" data-i18n="pubs.title">Papers &amp; preprints</h2>
+        </header>
+        <div class="filters" id="pub-filters" role="toolbar" data-i18n-attr="aria-label:pubs.filterAria" aria-label="Filter publications"></div>
+        <div class="pub-groups" id="pubs"></div>
+      </div>
+    </section>
+
+    <!-- Co-authors -->
+    <section id="people" class="section container band">
+      <header class="section-head">
+        <p class="kicker" data-i18n="people.kicker">Co-authors</p>
+        <h2 class="section-title" data-i18n="people.title">Who I write papers with</h2>
+        <p class="lead" data-i18n="people.lead">Each line is a paper we wrote together.</p>
+      </header>
+      <div class="people-wrap card">
+        <div class="people-stage">
+          <svg id="people-graph" viewBox="0 0 800 600" role="group" data-i18n-attr="aria-label:people.aria" aria-label="Co-author network"></svg>
+        </div>
+        <aside class="map-panel people-panel" id="people-panel" aria-live="polite"></aside>
+      </div>
     </section>
 
     <!-- Activities -->
@@ -219,10 +245,28 @@
     </form>
   </dialog>
 
+  <dialog class="story-dialog" id="story-dialog" aria-labelledby="story-title">
+    <div class="story-shell">
+      <header class="story-bar">
+        <button type="button" class="story-nav" id="story-prev" data-i18n-attr="aria-label:story.prev; title:story.prev" aria-label="Previous paper"></button>
+        <span class="story-count" id="story-count"></span>
+        <button type="button" class="story-nav" id="story-next" data-i18n-attr="aria-label:story.next; title:story.next" aria-label="Next paper"></button>
+        <form method="dialog"><button class="cite-close" value="close" data-i18n-attr="aria-label:cite.close" aria-label="Close">×</button></form>
+      </header>
+      <div class="story-scroll">
+        <figure class="story-figure" id="story-art"></figure>
+        <div class="story-body" id="story-body"></div>
+      </div>
+    </div>
+  </dialog>
+
+  <a class="to-top" id="to-top" href="#top" data-i18n-attr="aria-label:top; title:top" aria-label="Back to top"></a>
+
   <noscript><p class="container">This site needs JavaScript to show its content. Email: llorenc.balada.gaggioli@fel.cvut.cz</p></noscript>
 
-  <script src="assets/js/data.js?v=16"></script>
-  <script src="assets/js/main.js?v=16"></script>
-  <script src="assets/js/explain.js?v=16"></script>
+  <script src="assets/js/data.js?v=19"></script>
+  <script src="assets/js/illustrations.js?v=19"></script>
+  <script src="assets/js/main.js?v=19"></script>
+  <script src="assets/js/explain.js?v=19"></script>
 </body>
 </html>
