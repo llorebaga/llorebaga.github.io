@@ -857,3 +857,57 @@ address { font-style: normal; color: var(--ink-soft); margin-top: 12px; font-siz
 /* A halo in the drawing background keeps labels readable where they cross lines. */
 .il-text { paint-order: stroke; stroke: var(--surface-2); stroke-width: 3.5px; stroke-linejoin: round; }
 .il-text.on-dark, .il-text.id { stroke: none; }
+
+/* ------------------------------------------------------------------
+   Places map (assets/js/places.js)
+------------------------------------------------------------------ */
+.places-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; overflow: hidden; margin-bottom: 36px; }
+.places-stage { position: relative; padding: 12px 12px 4px; display: flex; flex-direction: column; justify-content: center; min-height: 360px; }
+.places-views { position: absolute; top: 14px; left: 14px; z-index: 1; display: flex; gap: 6px; }
+.places-views .chip { height: 32px; font-size: 13px; padding: 0 12px; }
+.places-status { margin: 0; position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-faint); font-size: 14px; }
+#places-map { width: 100%; height: auto; display: block; border-radius: 10px; }
+.pl-sphere { fill: color-mix(in srgb, var(--blue) 5%, var(--surface)); }
+.pl-grat { fill: none; stroke: var(--line); stroke-width: .6; }
+.pl-land { fill: color-mix(in srgb, var(--ink-faint) 16%, var(--surface-2)); }
+.pl-border { fill: none; stroke: var(--surface); stroke-width: .8; stroke-linejoin: round; }
+.pl-arc { fill: none; stroke: var(--blue-dark); stroke-width: 1.6; stroke-dasharray: 3 4; opacity: .35; transition: opacity .2s; }
+.pl-pin { cursor: pointer; outline: none; transition: opacity .2s; }
+.pl-pin circle { stroke: var(--node-stroke); stroke-width: 2.4; transition: transform .2s; transform-box: fill-box; transform-origin: center; }
+.pl-pin.talk circle:not(.pl-ring) { fill: var(--blue); }
+.pl-pin.poster circle:not(.pl-ring) { fill: var(--green); }
+.pl-pin.attended circle:not(.pl-ring) { fill: var(--yellow); }
+.pl-pin.upcoming circle:not(.pl-ring) { fill: var(--surface); stroke: var(--blue-dark); stroke-dasharray: 3 2; stroke-width: 2.2; }
+.pl-pin.home circle:not(.pl-ring) { fill: var(--surface); }
+.pl-pin .pl-ring { fill: none; stroke: var(--node-stroke-strong); stroke-width: 2; }
+.pl-pin:hover circle, .pl-pin:focus-visible circle, .pl-pin.lit circle { transform: scale(1.18); }
+.pl-pin:focus-visible circle:not(.pl-ring) { stroke: var(--blue); stroke-width: 3; }
+.pl-label {
+  font: 600 19px var(--sans); fill: var(--ink); pointer-events: none;
+  paint-order: stroke; stroke: color-mix(in srgb, var(--blue) 5%, var(--surface)); stroke-width: 4px; stroke-linejoin: round;
+  transition: opacity .2s;
+}
+#places-map.dimmed .pl-pin:not(.lit), #places-map.dimmed .pl-label:not(.lit) { opacity: .25; }
+#places-map.dimmed .pl-arc:not(.lit) { opacity: .06; }
+#places-map.dimmed .pl-arc.lit { opacity: .9; stroke-dasharray: none; stroke-width: 1.6; }
+.pl-dot.talk { background: var(--blue); }
+.pl-dot.poster { background: var(--green); }
+.pl-dot.attended { background: var(--yellow); }
+.pl-dot.lived { background: var(--surface); box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 4px var(--node-stroke-strong); }
+.places-wrap .legend { padding-top: 10px; }
+.places-items { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 2px; }
+.places-items li { display: grid; gap: 1px; padding: 9px 10px; border-radius: 12px; }
+.places-items li:hover { background: var(--surface); }
+.pi-date { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-faint); }
+.pi-title { font-size: 14.5px; font-weight: 600; line-height: 1.35; color: var(--ink); }
+.pi-sub { font-size: 13px; color: var(--ink-soft); }
+.pi-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.pi-tags:empty { display: none; }
+@media (max-width: 900px) {
+  .places-wrap { grid-template-columns: 1fr; }
+  .places-panel { border-left: 0; border-top: 1px solid var(--line); }
+  .places-stage { min-height: 260px; padding-top: 54px; }
+}
+@media (max-width: 560px) {
+  .pl-label { font-size: 26px; stroke-width: 6px; }
+}
