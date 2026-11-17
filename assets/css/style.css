@@ -862,7 +862,9 @@ address { font-style: normal; color: var(--ink-soft); margin-top: 12px; font-siz
    Places map (assets/js/places.js)
 ------------------------------------------------------------------ */
 .places-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; overflow: hidden; margin-bottom: 36px; }
-.places-stage { position: relative; padding: 12px 12px 4px; display: flex; flex-direction: column; justify-content: center; min-height: 360px; }
+.places-stage { position: relative; padding: 12px 12px 4px; display: flex; flex-direction: column; justify-content: flex-start; min-height: 360px; }
+/* The panel takes the map's height and scrolls, so hovering a dot never resizes the card or moves the map. */
+.places-panel { height: 0; min-height: 100%; overflow-y: auto; }
 .places-views { position: absolute; top: 14px; left: 14px; z-index: 1; display: flex; gap: 6px; }
 .places-views .chip { height: 32px; font-size: 13px; padding: 0 12px; }
 .places-status { margin: 0; position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-faint); font-size: 14px; }
@@ -905,7 +907,7 @@ address { font-style: normal; color: var(--ink-soft); margin-top: 12px; font-siz
 .pi-tags:empty { display: none; }
 @media (max-width: 900px) {
   .places-wrap { grid-template-columns: 1fr; }
-  .places-panel { border-left: 0; border-top: 1px solid var(--line); }
+  .places-panel { border-left: 0; border-top: 1px solid var(--line); height: auto; min-height: 0; overflow: visible; }
   .places-stage { min-height: 260px; padding-top: 54px; }
 }
 @media (max-width: 560px) {
