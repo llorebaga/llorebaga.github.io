@@ -539,6 +539,27 @@ window.SITE = {
         ca: "Reconstrueix la foto amb més o menys patrons i després afegeix qubits per veure com la descripció exacta topa amb un mur exponencial."
       },
       papers: ["TEMPO", "LR2Q", "LRPOP", "ComPOP"]
+    },
+    qcomp: {
+      tab: { en: "Making magic", ca: "Fabricar màgia" },
+      title: { en: "A factory for magic states", ca: "Una fàbrica d'estats màgics" },
+      body: {
+        en: [
+          "Most operations in a quantum computer can be protected from errors in a simple way, but those operations alone cannot run every algorithm. The missing ingredient is the magic state, and it cannot be protected the same way, so it comes out noisy.",
+          "The fix is a factory. It takes many noisy magic states, checks them against each other and keeps a batch only if every check passes. The classic factory turns 15 noisy states into 1 much cleaner one: each check looks at 8 of the inputs and raises an alarm when an odd number of them are faulty.",
+          "The factory is fooled only when the faults line up so that every check stays quiet. That needs at least three faults in just the right places, which is why the output error falls like the cube of the input error. In my papers I work out the limits of such factories: how few noisy inputs they can get away with, and which faults their checks can really catch."
+        ],
+        ca: [
+          "La majoria d'operacions d'un ordinador quàntic es poden protegir dels errors d'una manera senzilla, però amb aquestes operacions soles no es pot executar qualsevol algorisme. L'ingredient que falta és l'estat màgic, que no es pot protegir de la mateixa manera i, per tant, surt sorollós.",
+          "La solució és una fàbrica. Pren molts estats màgics sorollosos, els comprova els uns amb els altres i només es queda un lot si passa totes les comprovacions. La fàbrica clàssica converteix 15 estats sorollosos en 1 de molt més net: cada comprovació mira 8 de les entrades i fa saltar l'alarma quan un nombre senar d'elles són defectuoses.",
+          "La fàbrica només s'enganya quan els errors s'alineen de manera que totes les comprovacions callen. Això requereix com a mínim tres errors just als llocs adequats, i per això l'error de sortida cau com el cub de l'error d'entrada. Als meus articles estudio els límits d'aquestes fàbriques: amb quantes poques entrades sorolloses poden funcionar i quins errors poden detectar de debò les seves comprovacions."
+        ]
+      },
+      tryIt: {
+        en: "Click inputs to make them faulty and try to sneak a fault past the four checks. Then run 100,000 batches at once and compare the output with the inputs.",
+        ca: "Fes clic a les entrades per fer-les defectuoses i intenta colar un error sense que cap comprovació se n'adoni. Després fes 100.000 lots de cop i compara la sortida amb les entrades."
+      },
+      papers: ["MSD", "MSC"]
     }
   },
 

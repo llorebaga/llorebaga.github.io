@@ -1,8 +1,9 @@
 /*
- * "Research, explained": three small, real simulations.
- *   qc  single-qubit control on the Bloch sphere (piecewise-constant pulse, gradient optimizer)
- *   po  local descent vs. a certified lower bound on a one-variable polynomial landscape
- *   lr  low-rank (SVD) reconstruction of a photo + exponential cost of exact qubit simulation
+ * "Research, explained": four small, real simulations.
+ *   qc     single-qubit control on the Bloch sphere (piecewise-constant pulse, gradient optimizer)
+ *   po     local descent vs. a certified lower bound on a one-variable polynomial landscape
+ *   lr     low-rank (SVD) reconstruction of a photo + exponential cost of exact qubit simulation
+ *   qcomp  the 15-to-1 magic-state factory: its four checks, and Monte Carlo runs of many batches
  */
 (function () {
   "use strict";
@@ -500,10 +501,153 @@
   }
 
   // =====================================================================
+  // 4. Quantum computing: the 15-to-1 magic-state factory
+  // =====================================================================
+  // Input i (1..15) is wired to check j when bit j of i is set (the columns of the [15,11,3] Hamming
+  // code's parity-check matrix). A batch passes when the faulty inputs' numbers XOR to zero; it then
+  // carries a logical fault exactly when the number of faulty inputs is odd.
+  function buildFactory(host) {
+    const W = 520, H = 252, N = 15, CHECKS = ["A", "B", "C", "D"];
+    // Hamming [15,11] weight enumerator: how many fault patterns of each size pass every check.
+    const ENUM = { 0: 1, 3: 35, 4: 105, 5: 168, 6: 280, 7: 435, 8: 435, 9: 280, 10: 168, 11: 105, 12: 35, 15: 1 };
+    function exact(p) {
+      let keep = 0, bad = 0;
+      for (const [w, a] of Object.entries(ENUM)) {
+        const pr = a * p ** w * (1 - p) ** (N - w);
+        keep += pr; if (w % 2) bad += pr;
+      }
+      return { keep, out: bad / keep };
+    }
+    const RATES = [0.001, 0.002, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.12, 0.15];
+    const pct = (x) => `${num(100 * x, x < 0.01 ? 2 : x < 0.1 ? 1 : 0)}%`;
+    const sig2 = (x) => { const e = Math.floor(Math.log10(x)) - 1; return Math.round(x / 10 ** e) * 10 ** e; };
+    const rate = (x) => (x >= 0.01 ? pct(x) : x < 1e-15 ? T("mf.tiny") : T("mf.oneIn", { n: num(sig2(1 / x)) }));
+
+    const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, class: "mf", role: "group", "aria-label": T("mf.aria") });
+    const pos = (i) => [40 + ((i - 1) % 5) * 54, 52 + Math.floor((i - 1) / 5) * 72];
+    const inputs = [];
+    svg.append(s("text", { class: "mf-head", x: 148, y: 16, "text-anchor": "middle" }, T("mf.inputs")));
+    for (let i = 1; i <= N; i++) {
+      const [x, y] = pos(i);
+      const bits = CHECKS.map((_, j) => s("rect", { class: `mf-bit${i & (1 << j) ? " on" : ""}`, x: x - 15 + j * 8, y: y + 23, width: 6, height: 6, rx: 1.5, "data-check": j }));
+      const g = s("g", { class: "mf-in", tabindex: 0, role: "button", "aria-pressed": "false", "aria-label": T("mf.inAria", { i }) },
+        s("circle", { cx: x, cy: y, r: 17 }), s("text", { x, y, "text-anchor": "middle", "dominant-baseline": "central" }, String(i)), ...bits);
+      g.addEventListener("click", () => toggle(i));
+      g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(i); } });
+      inputs[i] = g;
+      svg.append(g);
+    }
+    svg.append(s("text", { class: "mf-head", x: 352, y: 16, "text-anchor": "middle" }, T("mf.checks")));
+    const lamps = CHECKS.map((c, j) => {
+      const y = 34 + j * 50;
+      const g = s("g", { class: "mf-lamp", tabindex: 0, role: "img", "aria-label": T("mf.checkAria", { c }) },
+        s("rect", { x: 328, y, width: 48, height: 34, rx: 10 }),
+        s("text", { x: 352, y: y + 17, "text-anchor": "middle", "dominant-baseline": "central" }, c));
+      const on = () => show(j), off = () => show(null);
+      g.addEventListener("mouseenter", on); g.addEventListener("mouseleave", off);
+      g.addEventListener("focus", on); g.addEventListener("blur", off);
+      svg.append(g);
+      return g;
+    });
+    svg.append(
+      s("line", { class: "mf-arrow", x1: 296, y1: 126, x2: 318, y2: 126 }), s("path", { class: "mf-head-tip", d: "M318 120 L326 126 L318 132 Z" }),
+      s("line", { class: "mf-arrow", x1: 386, y1: 126, x2: 418, y2: 126 }), s("path", { class: "mf-head-tip", d: "M418 120 L426 126 L418 132 Z" }),
+      s("text", { class: "mf-head", x: 466, y: 16, "text-anchor": "middle" }, T("mf.output")));
+    const outCircle = s("circle", { cx: 466, cy: 126, r: 30 });
+    const outText = s("text", { x: 466, y: 126, "text-anchor": "middle", "dominant-baseline": "central" }, "T");
+    const outWord = s("text", { class: "mf-word", x: 466, y: 178, "text-anchor": "middle" });
+    const out = s("g", { class: "mf-out" }, outCircle, outText);
+    svg.append(out, outWord, s("text", { class: "mf-key", x: 16, y: H - 6 }, T("mf.key")));
+
+    const status = h("p", { class: "ex-status", "aria-live": "polite" });
+    const faulty = new Set();
+    function show(j) {
+      inputs.forEach((g, i) => g && g.classList.toggle("hl", j != null && !!(i & (1 << j))));
+      svg.querySelectorAll(".mf-bit").forEach((b) => b.classList.toggle("hl", j != null && +b.dataset.check === j));
+    }
+    function update() {
+      let syn = 0;
+      faulty.forEach((i) => { syn ^= i; });
+      inputs.forEach((g, i) => { if (!g) return; const f = faulty.has(i); g.classList.toggle("bad", f); g.setAttribute("aria-pressed", String(f)); });
+      lamps.forEach((g, j) => g.classList.toggle("fire", !!(syn & (1 << j))));
+      const fired = CHECKS.filter((_, j) => syn & (1 << j)).length, n = faulty.size;
+      const state = !n ? "clean" : syn ? "trash" : n % 2 ? "fooled" : "clean";
+      out.setAttribute("class", `mf-out ${state}`);
+      outText.textContent = state === "trash" ? "✕" : "T";
+      outWord.textContent = T(`mf.w.${state}`);
+      status.textContent =
+        !n ? T("mf.intro") :
+        syn ? T("mf.caught", { n: fired }) :
+        n % 2 ? T(n === 3 ? "mf.fooled3" : "mf.fooled", { n }) :
+        T("mf.cancel", { n });
+    }
+    function toggle(i) { faulty.has(i) ? faulty.delete(i) : faulty.add(i); update(); }
+    function set(list) { faulty.clear(); list.forEach((i) => faulty.add(i)); update(); }
+    function sneaky() {
+      const a = 1 + Math.floor(Math.random() * N);
+      let b; do b = 1 + Math.floor(Math.random() * N); while (b === a);
+      set([a, b, a ^ b]);
+    }
+
+    // --- many batches at once ---
+    const slider = h("input", { type: "range", min: 0, max: RATES.length - 1, value: 3, class: "range", "aria-label": T("mf.rateAria") });
+    const pOut = h("strong", {});
+    const stats = h("div", { class: "mf-stats", "aria-live": "polite" });
+    const p = () => RATES[+slider.value];
+    function runOne() {
+      const list = [];
+      for (let i = 1; i <= N; i++) if (Math.random() < p()) list.push(i);
+      set(list);
+    }
+    function bar(label, x, cls) {
+      const w = clamp((Math.log10(x) + 13) / 13 * 100, 2, 100); // log scale from 1e-13 to 1
+      return h("div", { class: "wall-row" }, h("span", { class: "wall-name" }, label),
+        h("span", { class: "wall-track" }, h("span", { class: `wall-fill ${cls}`, style: `width:${w}%` })), h("span", { class: "wall-val" }, rate(x)));
+    }
+    function runMany() {
+      const B = 100000, q = p();
+      let kept = 0, bad = 0;
+      for (let b = 0; b < B; b++) {
+        let syn = 0, n = 0;
+        for (let i = 1; i <= N; i++) if (Math.random() < q) { syn ^= i; n++; }
+        if (!syn) { kept++; if (n % 2) bad++; }
+      }
+      const th = exact(q), two = exact(th.out);
+      stats.replaceChildren(
+        h("p", { class: "mf-line" }, T("mf.kept", { kept: num(kept), b: num(B), bad: num(bad) })),
+        bar(T("mf.barIn"), q, "in"),
+        bar(T("mf.barOut"), th.out, "out"),
+        bar(T("mf.barTwo"), two.out, "two"),
+        h("p", { class: "mf-line" },
+          bad ? T("mf.measured", { m: rate(bad / kept), e: rate(th.out) }) : T("mf.none", { kept: num(kept), e: rate(th.out) }),
+          " ", T("mf.cost", { c: num(N / th.keep, 1) })),
+        ...(th.out >= q ? [h("p", { class: "mf-line warn" }, T("mf.useless"))] : []));
+    }
+    function onRate() { pOut.textContent = pct(p()); stats.replaceChildren(h("p", { class: "mf-line faint" }, T("mf.prompt"))); }
+    slider.addEventListener("input", onRate);
+
+    host.append(
+      h("div", { class: "mf-wrap" }, svg),
+      status,
+      h("div", { class: "links" },
+        h("button", { type: "button", class: "btn", onclick: sneaky }, T("mf.sneaky")),
+        h("button", { type: "button", class: "link-btn", onclick: () => set([]) }, T("mf.clear"))),
+      h("div", { class: "mf-many" },
+        h("label", { class: "range-row" }, h("span", {}, T("mf.rate"), pOut), slider),
+        h("div", { class: "links" },
+          h("button", { type: "button", class: "btn", onclick: runMany }, T("mf.runMany")),
+          h("button", { type: "button", class: "link-btn", onclick: runOne }, T("mf.runOne"))),
+        stats),
+      h("p", { class: "ex-fine" }, T("mf.fine"))
+    );
+    update(); onRate();
+  }
+
+  // =====================================================================
   // Tabs
   // =====================================================================
-  const BUILDERS = { qc: buildQubit, po: buildLandscape, lr: buildLowRank };
-  const COLORS = { qc: "var(--blue)", po: "var(--green)", lr: "var(--yellow)" };
+  const BUILDERS = { qc: buildQubit, po: buildLandscape, lr: buildLowRank, qcomp: buildFactory };
+  const COLORS = { qc: "var(--blue)", po: "var(--green)", lr: "var(--yellow)", qcomp: "var(--coral)" };
   const keys = Object.keys(E);
   const tabs = document.getElementById("ex-tabs"), panels = document.getElementById("ex-panels");
   const pubById = Object.fromEntries(S.publications.map((p) => [p.id, p]));

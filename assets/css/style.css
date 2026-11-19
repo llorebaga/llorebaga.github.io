@@ -17,6 +17,8 @@
   --green-ink: #4d7426;
   --yellow: #e0b847;
   --yellow-ink: #8a6a10;
+  --coral: #d0694f;
+  --coral-ink: #a8452d;
   --node-stroke: #42464b;
   --node-stroke-strong: #1f2328;
   --edge: #55636a;
@@ -43,6 +45,8 @@
     --accent-ink: #7fabe0;
     --green-ink: #a9d178;
     --yellow-ink: #ecc95e;
+    --coral: #e07f66;
+    --coral-ink: #f09a83;
     --node-stroke: #0d1216;
     --node-stroke-strong: #e7ecef;
     --edge: #8796a0;
@@ -52,6 +56,8 @@
   }
 }
 :root[data-theme="dark"] {
+  --coral: #e07f66;
+  --coral-ink: #f09a83;
   --bg: #11171c;
   --surface: #182129;
   --surface-2: #1e2932;
@@ -912,4 +918,52 @@ address { font-style: normal; color: var(--ink-soft); margin-top: 12px; font-siz
 }
 @media (max-width: 560px) {
   .pl-label { font-size: 26px; stroke-width: 6px; }
+}
+
+/* ------------------------------------------------------------------
+   Research, explained 4: magic-state factory (assets/js/explain.js)
+------------------------------------------------------------------ */
+.mf-wrap { border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); padding: 8px 6px 4px; }
+.mf { width: 100%; height: auto; display: block; }
+.mf text { font-family: var(--sans); }
+.mf-head { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-faint); }
+.mf-key { font-size: 11.5px; fill: var(--ink-faint); }
+.mf-in { cursor: pointer; outline: none; }
+.mf-in circle { fill: var(--yellow); stroke: var(--node-stroke); stroke-width: 1.8; transition: fill .15s, transform .15s; transform-box: fill-box; transform-origin: center; }
+.mf-in text { font-size: 13px; font-weight: 700; fill: #24323a; pointer-events: none; }
+.mf-in:hover circle, .mf-in:focus-visible circle { transform: scale(1.12); }
+.mf-in:focus-visible circle { stroke: var(--blue); stroke-width: 3; }
+.mf-in.bad circle { fill: var(--coral); }
+.mf-in.bad text { fill: #fff; }
+.mf-in.hl circle { stroke: var(--blue-dark); stroke-width: 3.5; }
+.mf-bit { fill: none; stroke: var(--cluster-stroke); stroke-width: 1; }
+.mf-bit.on { fill: var(--ink-soft); stroke: var(--ink-soft); }
+.mf-bit.on.hl { fill: var(--blue-dark); stroke: var(--blue-dark); }
+.mf-lamp { outline: none; cursor: help; }
+.mf-lamp rect { fill: var(--surface); stroke: var(--cluster-stroke); stroke-width: 1.5; transition: fill .2s, stroke .2s; }
+.mf-lamp text { font-size: 15px; font-weight: 700; fill: var(--ink); }
+.mf-lamp:hover rect, .mf-lamp:focus-visible rect { stroke: var(--blue-dark); stroke-width: 2.5; }
+.mf-lamp.fire rect { fill: var(--coral); stroke: var(--coral); }
+.mf-lamp.fire text { fill: #fff; }
+.mf-arrow { stroke: var(--edge); stroke-width: 2; }
+.mf-head-tip { fill: var(--edge); }
+.mf-out circle { fill: var(--green); stroke: var(--node-stroke); stroke-width: 2; transition: fill .2s; }
+.mf-out text { font: 700 24px var(--serif); fill: #fffefb; }
+.mf-out.fooled circle { fill: var(--coral); }
+.mf-out.trash circle { fill: var(--surface); stroke: var(--cluster-stroke); stroke-dasharray: 5 4; }
+.mf-out.trash text { fill: var(--ink-faint); font-family: var(--sans); font-size: 22px; }
+.mf-word { font-size: 14px; font-weight: 700; fill: var(--ink-soft); }
+.mf-many { margin-top: 18px; padding-top: 4px; border-top: 1px solid var(--line); }
+.mf-stats { margin-top: 6px; }
+.mf-line { margin: 12px 0 0; font-size: 14.5px; color: var(--ink); }
+.mf-line.faint { color: var(--ink-faint); }
+.mf-line.warn { color: var(--coral-ink); font-weight: 600; }
+.wall-fill.in { background: var(--yellow); }
+.wall-fill.out { background: var(--green); }
+.wall-fill.two { background: var(--blue); }
+@media (max-width: 560px) {
+  .mf-head { font-size: 14px; letter-spacing: .03em; }
+  .mf-key { font-size: 14px; }
+  .mf-word { font-size: 16px; }
+  .mf-in text { font-size: 14px; }
 }
