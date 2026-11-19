@@ -1,12 +1,12 @@
 /*
- * The hero animation: optimal control of a qubit, computed live (not a recording).
+ * The hero animation: a qubit driven to its speed limit, computed live (not a recording).
  *
- * The qubit has a fixed drift and one bounded control, H(t) = (Δ/2)σz + (u(t)/2)σx, with
- * |u| ≤ U_MAX and u piecewise constant on N slices of a total time T. A gradient optimizer
- * (GRAPE-style, with Adam steps) shapes u(t) until the qubit, starting in |0⟩, reaches a
- * target state. Each success shortens T and tries again; when no pulse is found within the
- * iteration budget, the last time that worked is shown as the shortest time found, and the
- * pulse there is close to bang-bang (pinned at ±U_MAX), as time-optimal control predicts.
+ * The qubit is driven on resonance with a two-quadrature control, H(t) = (ux(t) σx + uy(t) σy)/2,
+ * whose strength is bounded, |u(t)| ≤ U_MAX. The Bloch vector then turns at angular speed |u| ≤ U_MAX,
+ * so reaching a target at angle θ from |0⟩ takes at least T* = θ / U_MAX: a proven limit that no pulse
+ * of this strength can beat, drawn as the shaded zone. A gradient optimizer (GRAPE-style, Adam steps)
+ * shapes u(t) from a random start; after each success the pulse is shortened, never below T*. At T* the
+ * pulse it finds is the one the proof says is fastest: full strength all the way, a single arc on the sphere.
  * Then a new target is drawn and it starts over.
  */
 (function () {
@@ -17,58 +17,64 @@
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ---------- physics ----------
-  const N = 44, DELTA = 1, U_MAX = 2.4, T0 = 4.2, SHRINK = 0.9, F_OK = 0.995, BUDGET = 260;
-  // One slice: ψ ← exp(-i (hx σx + hz σz) dt) ψ, with hx = u/2, hz = Δ/2. ψ = [ar, ai, br, bi].
-  function step(psi, u, dt) {
-    const hx = u / 2, hz = DELTA / 2, w = Math.hypot(hx, hz), c = Math.cos(w * dt), s = Math.sin(w * dt) / w;
-    const [ar, ai, br, bi] = psi;
-    const Har = hz * ar + hx * br, Hai = hz * ai + hx * bi; // (Hψ)_a
-    const Hbr = hx * ar - hz * br, Hbi = hx * ai - hz * bi; // (Hψ)_b
-    psi[0] = c * ar + s * Hai; psi[1] = c * ai - s * Har;   // cψ - i s Hψ
-    psi[2] = c * br + s * Hbi; psi[3] = c * bi - s * Hbr;
+  const N = 40, U_MAX = 2.4, T_AXIS = 3.4, T_START = 3.1, SHRINK = 0.86, F_OK = 0.995, BUDGET = 320;
+  // Rotate the Bloch vector r about (ux, uy, 0) by the angle |u| dt.
+  function rot(r, ux, uy, dt) {
+    const w = Math.hypot(ux, uy);
+    if (w < 1e-12) return;
+    const kx = ux / w, ky = uy / w, a = w * dt, c = Math.cos(a), s = Math.sin(a);
+    const [x, y, z] = r, kv = kx * x + ky * y;
+    r[0] = x * c + ky * z * s + kx * kv * (1 - c);
+    r[1] = y * c - kx * z * s + ky * kv * (1 - c);
+    r[2] = z * c + (kx * y - ky * x) * s;
   }
-  const bloch = ([ar, ai, br, bi]) => [2 * (ar * br + ai * bi), 2 * (ar * bi - ai * br), ar * ar + ai * ai - br * br - bi * bi];
-  // Target state from its Bloch angles: cos(θ/2)|0⟩ + e^{iφ} sin(θ/2)|1⟩.
-  let target, tgt;
+  let tgt, tLim;
   function newTarget() {
-    const th = 2.2 + Math.random() * 0.9, ph = Math.random() * 2 * Math.PI;
-    target = [Math.cos(th / 2), 0, Math.sin(th / 2) * Math.cos(ph), Math.sin(th / 2) * Math.sin(ph)];
-    tgt = bloch(target);
+    const th = 1.5 + Math.random() * 1.45, ph = Math.random() * 2 * Math.PI;
+    tgt = [Math.sin(th) * Math.cos(ph), Math.sin(th) * Math.sin(ph), Math.cos(th)];
+    tLim = th / U_MAX;                       // the speed limit for this target
   }
-  function fidelity(u, T) {
-    const psi = [1, 0, 0, 0], dt = T / N;
-    for (let k = 0; k < N; k++) step(psi, u[k], dt);
-    const [tr, ti, sr, si] = target, [ar, ai, br, bi] = psi;
-    const re = tr * ar + ti * ai + sr * br + si * bi, im = tr * ai - ti * ar + sr * bi - si * br; // ⟨target|ψ⟩
-    return re * re + im * im;
+  function fidelity(ux, uy, T) {
+    const r = [0, 0, 1], dt = T / N;
+    for (let k = 0; k < N; k++) rot(r, ux[k], uy[k], dt);
+    return (1 + r[0] * tgt[0] + r[1] * tgt[1] + r[2] * tgt[2]) / 2;
   }
+  const clip = (ux, uy, k) => { const a = Math.hypot(ux[k], uy[k]); if (a > U_MAX) { ux[k] *= U_MAX / a; uy[k] *= U_MAX / a; } };
 
-  // ---------- optimizer (gradient ascent on the fidelity, Adam steps, clipped to the bounds) ----------
-  let u, T, best, bestT, iter, F, phase, hold, m, v, t;
+  // ---------- optimizer (gradient ascent on the fidelity, Adam steps, kept within the strength bound) ----------
+  let ux, uy, T, best, bestT, iter, F, phase, hold, reached, m, v, t;
+  function resetAdam() { m = new Float64Array(2 * N); v = new Float64Array(2 * N); t = 0; iter = 0; }
   function newRound() {
     newTarget();
-    const a = Math.random() * 6, b = Math.random() * 6;
-    u = Float64Array.from({ length: N }, (_, k) => 0.9 + 0.5 * Math.sin(a + k / 5) + 0.3 * Math.sin(b + k / 2.3));
-    T = T0; best = null; bestT = null; iter = 0; phase = "opt"; hold = 0;
-    m = new Float64Array(N); v = new Float64Array(N); t = 0;
-    F = fidelity(u, T);
+    const a = Math.random() * 6, b = Math.random() * 6, c = Math.random() * 6, d = Math.random() * 6;
+    ux = Float64Array.from({ length: N }, (_, k) => 0.9 * Math.sin(a + k / 6) + 0.5 * Math.sin(b + k / 2.6));
+    uy = Float64Array.from({ length: N }, (_, k) => 0.9 * Math.sin(c + k / 7) + 0.5 * Math.sin(d + k / 3.1));
+    T = T_START; best = null; bestT = null; phase = "opt"; hold = 0; reached = false;
+    resetAdam();
+    F = fidelity(ux, uy, T);
   }
   function optStep() {
-    const eps = 1e-5, g = new Float64Array(N), F0 = fidelity(u, T);
-    for (let k = 0; k < N; k++) { const keep = u[k]; u[k] = keep + eps; g[k] = (fidelity(u, T) - F0) / eps; u[k] = keep; }
-    t++;
+    const eps = 1e-5, g = new Float64Array(2 * N), F0 = fidelity(ux, uy, T);
     for (let k = 0; k < N; k++) {
-      m[k] = 0.9 * m[k] + 0.1 * g[k]; v[k] = 0.999 * v[k] + 0.001 * g[k] * g[k];
-      const mh = m[k] / (1 - 0.9 ** t), vh = v[k] / (1 - 0.999 ** t);
-      u[k] = Math.max(-U_MAX, Math.min(U_MAX, u[k] + 0.06 * mh / (Math.sqrt(vh) + 1e-8)));
+      let keep = ux[k]; ux[k] = keep + eps; g[k] = (fidelity(ux, uy, T) - F0) / eps; ux[k] = keep;
+      keep = uy[k]; uy[k] = keep + eps; g[N + k] = (fidelity(ux, uy, T) - F0) / eps; uy[k] = keep;
     }
-    F = fidelity(u, T); iter++;
-    if (F >= F_OK) {                   // it works at this time: remember it, then try a shorter one
-      best = Float64Array.from(u); bestT = T;
-      T *= SHRINK; iter = 0; t = 0; m.fill(0); v.fill(0);
-      F = fidelity(u, T);
-    } else if (iter > BUDGET) {        // no pulse found in time: the last success is the shortest time found
-      if (best) { u = best; T = bestT; F = fidelity(u, T); }
+    t++;
+    for (let j = 0; j < 2 * N; j++) {
+      m[j] = 0.9 * m[j] + 0.1 * g[j]; v[j] = 0.999 * v[j] + 0.001 * g[j] * g[j];
+      const step = 0.07 * (m[j] / (1 - 0.9 ** t)) / (Math.sqrt(v[j] / (1 - 0.999 ** t)) + 1e-8);
+      if (j < N) ux[j] += step; else uy[j - N] += step;
+    }
+    for (let k = 0; k < N; k++) clip(ux, uy, k);
+    F = fidelity(ux, uy, T); iter++;
+    if (F >= F_OK) {                          // it works at this time: keep it, then try a shorter one
+      best = [Float64Array.from(ux), Float64Array.from(uy)]; bestT = T;
+      if (T <= tLim * 1.01) { reached = true; phase = "hold"; hold = 0; return; }
+      T = Math.max(tLim * 1.005, T * SHRINK);  // the proof says shorter than tLim is impossible
+      resetAdam();
+      F = fidelity(ux, uy, T);
+    } else if (iter > BUDGET) {               // no pulse found in time: show the last one that worked
+      if (best) { [ux, uy] = best; T = bestT; F = fidelity(ux, uy, T); }
       phase = "hold"; hold = 0;
     }
   }
@@ -87,7 +93,7 @@
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
   }
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  let view = 0.6;                      // slowly turning view of the Bloch sphere
+  let view = 0.6;                             // slowly turning view of the Bloch sphere
 
   function draw() {
     if (!W) return;
@@ -95,37 +101,49 @@
     ctx.clearRect(0, 0, W, H);
     const blue = css("--blue"), green = css("--green"), yellow = css("--yellow"), faint = css("--ink-faint"), edge = css("--cluster-stroke"), ink = css("--ink");
     const R = Math.min(H * 0.4, W * 0.16), cx = W - R - 6, cy = H / 2;
-    const x0 = 6, x1 = cx - R - 34, mid = H * 0.5, amp = H * 0.36;
-    const X = (time) => x0 + (time / T0) * (x1 - x0), Y = (val) => mid - (val / U_MAX) * amp;
-    ctx.font = "italic 14px 'Libre Baskerville', Georgia, serif";
+    const x0 = 6, x1 = cx - R - 34, top = 30, base = H - 36;
+    const X = (time) => x0 + (time / T_AXIS) * (x1 - x0), Y = (a) => base - (a / U_MAX) * (base - top);
+    const xl = X(tLim);
 
-    // Bounds ±U_MAX and the time axis.
+    // The proven speed limit: no pulse of this strength finishes inside the shaded zone.
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x0, top - 8, xl - x0, base - top + 8); ctx.clip();
+    ctx.fillStyle = green; ctx.globalAlpha = 0.08; ctx.fillRect(x0, top - 8, xl - x0, base - top + 8);
+    ctx.globalAlpha = 0.28; ctx.strokeStyle = green; ctx.lineWidth = 1;
+    for (let s = -H; s < xl - x0 + H; s += 8) { ctx.beginPath(); ctx.moveTo(x0 + s, base); ctx.lineTo(x0 + s + (base - top + 8), top - 8); ctx.stroke(); }
+    ctx.restore();
+    ctx.strokeStyle = green; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xl, top - 8); ctx.lineTo(xl, base); ctx.stroke();
+
+    // Strength bound, time axis, labels.
     ctx.strokeStyle = edge; ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
-    for (const val of [U_MAX, -U_MAX]) { ctx.beginPath(); ctx.moveTo(x0, Y(val)); ctx.lineTo(x1, Y(val)); ctx.stroke(); }
-    ctx.beginPath(); ctx.moveTo(x0, Y(0)); ctx.lineTo(x1, Y(0)); ctx.stroke();
-    // Current duration T.
-    ctx.strokeStyle = phase === "hold" ? green : faint; ctx.setLineDash([2, 4]);
-    ctx.beginPath(); ctx.moveTo(X(T), Y(U_MAX) - 6); ctx.lineTo(X(T), Y(-U_MAX) + 6); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = faint; ctx.textAlign = "right"; ctx.fillText("t", x1, Y(0) - 7);
-    ctx.textAlign = "left"; ctx.fillStyle = blue; ctx.fillText("u(t)", x0, Y(U_MAX) - 8);
+    ctx.beginPath(); ctx.moveTo(x0, Y(U_MAX)); ctx.lineTo(x1, Y(U_MAX)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(x0, base); ctx.lineTo(x1, base); ctx.stroke();
+    ctx.font = "italic 14px 'Libre Baskerville', Georgia, serif";
+    ctx.fillStyle = faint; ctx.textAlign = "right"; ctx.fillText("t", x1, base - 7);
+    ctx.textAlign = "left"; ctx.fillStyle = blue; ctx.fillText("|u(t)|", x0, top - 14);
+    ctx.font = "600 12px Inter, system-ui, sans-serif"; ctx.fillStyle = green;
+    ctx.fillText(T_(reached ? "pulse.reached" : "pulse.limit"), x0, base + 22);
 
-    // The pulse: piecewise constant, filled to the axis.
-    const dt = T / N;
-    ctx.beginPath(); ctx.moveTo(X(0), Y(0));
-    for (let k = 0; k < N; k++) { ctx.lineTo(X(k * dt), Y(u[k])); ctx.lineTo(X((k + 1) * dt), Y(u[k])); }
-    ctx.lineTo(X(T), Y(0)); ctx.closePath();
-    ctx.fillStyle = blue; ctx.globalAlpha = 0.12; ctx.fill(); ctx.globalAlpha = 1;
-    ctx.beginPath();
-    for (let k = 0; k < N; k++) { k ? ctx.lineTo(X(k * dt), Y(u[k])) : ctx.moveTo(X(0), Y(u[0])); ctx.lineTo(X((k + 1) * dt), Y(u[k])); }
-    ctx.strokeStyle = blue; ctx.lineWidth = 2.5; ctx.lineJoin = "round"; ctx.stroke();
-    if (phase === "hold") {
-      ctx.fillStyle = green; ctx.font = "600 12px Inter, system-ui, sans-serif"; ctx.textAlign = "center";
-      ctx.fillText(T_("pulse.min"), Math.min(Math.max(X(T), x0 + 60), x1 - 60), Y(-U_MAX) + 22);
+    // Current duration T.
+    if (!reached) {
+      ctx.strokeStyle = faint; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+      ctx.beginPath(); ctx.moveTo(X(T), top - 8); ctx.lineTo(X(T), base + 6); ctx.stroke(); ctx.setLineDash([]);
     }
+    // The pulse strength |u(t)|: piecewise constant, filled to the axis.
+    const dt = T / N, amp = (k) => Math.hypot(ux[k], uy[k]);
+    ctx.beginPath(); ctx.moveTo(X(0), base);
+    for (let k = 0; k < N; k++) { ctx.lineTo(X(k * dt), Y(amp(k))); ctx.lineTo(X((k + 1) * dt), Y(amp(k))); }
+    ctx.lineTo(X(T), base); ctx.closePath();
+    ctx.fillStyle = blue; ctx.globalAlpha = 0.14; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.beginPath();
+    for (let k = 0; k < N; k++) { k ? ctx.lineTo(X(k * dt), Y(amp(k))) : ctx.moveTo(X(0), Y(amp(0))); ctx.lineTo(X((k + 1) * dt), Y(amp(k))); }
+    ctx.strokeStyle = blue; ctx.lineWidth = 2.5; ctx.lineJoin = "round"; ctx.stroke();
 
     // Bloch sphere: outline, equator, axis, the path the pulse drives, and the target.
     const el = 0.38, ce = Math.cos(el), se = Math.sin(el), cv = Math.cos(view), sv = Math.sin(view);
-    const P = ([x, y, z]) => { const xr = x * cv - y * sv, yr = x * sv + y * cv; return [cx + R * xr, cy - R * (z * ce - yr * se), yr]; };
+    const P = ([x, y, z]) => { const xr = x * cv - y * sv, yr = x * sv + y * cv; return [cx + R * xr, cy - R * (z * ce - yr * se)]; };
     ctx.strokeStyle = edge; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.stroke();
     ctx.beginPath();
@@ -135,11 +153,10 @@
     ctx.setLineDash([2, 4]); ctx.beginPath(); ctx.moveTo(nx, ny); ctx.lineTo(sx, sy); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = faint; ctx.font = "13px 'Libre Baskerville', Georgia, serif"; ctx.textAlign = "center";
     ctx.fillText("|0⟩", nx, ny - 8); ctx.fillText("|1⟩", sx, sy + 17);
-    // Path under the current pulse.
-    const psi = [1, 0, 0, 0], sub = 4;
-    ctx.beginPath(); let [px, py] = P(bloch(psi)); ctx.moveTo(px, py);
-    for (let k = 0; k < N; k++) for (let j = 0; j < sub; j++) { step(psi, u[k], dt / sub); [px, py] = P(bloch(psi)); ctx.lineTo(px, py); }
-    ctx.strokeStyle = blue; ctx.lineWidth = 2; ctx.stroke();
+    const r = [0, 0, 1], sub = 4;
+    ctx.beginPath(); let [px, py] = P(r); ctx.moveTo(px, py);
+    for (let k = 0; k < N; k++) for (let j = 0; j < sub; j++) { rot(r, ux[k], uy[k], dt / sub); [px, py] = P(r); ctx.lineTo(px, py); }
+    ctx.strokeStyle = reached ? green : blue; ctx.lineWidth = 2; ctx.stroke();
     const [tx, ty] = P(tgt);
     ctx.strokeStyle = green; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(tx, ty, 8, 0, 2 * Math.PI); ctx.stroke();
     ctx.fillStyle = yellow; ctx.strokeStyle = ink; ctx.lineWidth = 1.2;
@@ -147,7 +164,7 @@
   }
 
   // ---------- loop: a few optimizer steps per frame; sleeps when off screen ----------
-  const STEPS_PER_S = 40;            // optimizer steps per second, the same on every screen
+  const STEPS_PER_S = 40;                     // optimizer steps per second, the same on every screen
   let visible = true, running = false, last = 0, acc = 0;
   function frame(now) {
     running = false;
@@ -155,7 +172,7 @@
     const dtf = Math.min(0.05, (now - (last || now)) / 1000); last = now;
     view += dtf * 0.25;
     if (phase === "opt") { acc += dtf * STEPS_PER_S; while (acc >= 1 && phase === "opt") { optStep(); acc--; } }
-    else if ((hold += dtf) > 3.2) newRound();
+    else if ((hold += dtf) > 3.4) newRound();
     draw();
     schedule();
   }

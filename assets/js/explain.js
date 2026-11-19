@@ -1,8 +1,8 @@
 /*
- * "Research, explained": four small, real simulations.
+ * "Research, explained": three small, real simulations.
  *   qc     single-qubit control on the Bloch sphere (piecewise-constant pulse, gradient optimizer)
+ *          and its speed limit: a pulse of strength |u| <= 1 turns the qubit at most OMEGA per unit time
  *   po     local descent vs. a certified lower bound on a one-variable polynomial landscape
- *   lr     low-rank (SVD) reconstruction of a photo + exponential cost of exact qubit simulation
  *   qcomp  the 15-to-1 magic-state factory: its four checks, and Monte Carlo runs of many batches
  */
 (function () {
@@ -60,7 +60,10 @@
   // 1. Quantum control on the Bloch sphere
   // =====================================================================
   function buildQubit(host) {
-    const N = 8, DURATION = 3, DT = DURATION / N, OMEGA = 3, DELTA = 1, SUB = 14;
+    // Resonant drive, no drift: the arrow turns about x at speed OMEGA*u, |u| <= 1. Flipping it from 0 to 1
+    // means turning it by π, so no pulse can do it in less than LIMIT = π / OMEGA: the speed limit.
+    const N = 8, OMEGA = 3, DELTA = 0, SUB = 14, LIMIT = Math.PI / OMEGA;
+    let dur = 3;
     let u = new Array(N).fill(0);
     let az = -0.6, el = 0.35; // view angles
 
@@ -75,6 +78,7 @@
     function evolve(ctrl, withPath) {
       let r = [0, 0, 1];
       const path = withPath ? [r] : null;
+      const DT = dur / N;
       for (let k = 0; k < N; k++) {
         const w = [OMEGA * ctrl[k], 0, DELTA];
         if (withPath) for (let j = 0; j < SUB; j++) { r = rotate(r, w, DT / SUB); path.push(r); }
@@ -190,7 +194,7 @@
       fidNum.textContent = `${pct >= 99.95 ? "100" : num(pct, 1)}%`;
       fidBar.style.width = `${pct}%`;
       fidBar.classList.toggle("done", res.F > 0.999);
-      status.textContent = res.F > 0.999 ? T("qc.done") :
+      status.textContent = dur < LIMIT ? T("qc.below") : res.F > 0.999 ? T("qc.done") :
         u.every((v) => v === 0) ? T("qc.none") :
         res.F > 0.9 ? T("qc.close") : T("qc.keep");
       return res;
@@ -209,13 +213,19 @@
           it++;
         }
         const F = update().F;
-        return !(F > 0.9995 || it > 400);
+        return !(F > 0.9995 || it > (dur < LIMIT ? 120 : 400));
       };
       if (reduceMotion) { while (run()); return; }
       stopOpt = animate(run);
     }
     const optBtn = h("button", { type: "button", class: "btn", onclick: optimize }, T("qc.optimize"));
     const resetBtn = h("button", { type: "button", class: "link-btn", onclick: () => { stopOpt(); u = new Array(N).fill(0); update(); } }, T("qc.reset"));
+    // Time allowed; the slider is flagged when it is below the speed limit.
+    const time = h("input", { type: "range", min: 0.5, max: 3, step: 0.05, value: dur, class: "range qc-time", "aria-label": T("qc.timeAria") });
+    const timeOut = h("strong", {});
+    const showTime = () => { timeOut.textContent = num(dur, 2); time.classList.toggle("below", dur < LIMIT); };
+    time.addEventListener("input", () => { dur = +time.value; showTime(); update(); });
+    showTime();
 
     host.append(
       h("div", { class: "qubit-grid" },
@@ -223,6 +233,8 @@
         h("div", { class: "qubit-controls" },
           h("p", { class: "viz-label" }, T("qc.pulse")),
           pulse,
+          h("label", { class: "range-row" }, h("span", {}, T("qc.timeLabel"), timeOut), time),
+          h("p", { class: "ex-note" }, T("qc.limitNote", { t: num(LIMIT, 2) })),
           h("div", { class: "fid" }, h("span", { class: "fid-label" }, T("qc.match")), fidNum),
           h("div", { class: "fid-track" }, fidBar),
           status,
@@ -384,124 +396,7 @@
   }
 
   // =====================================================================
-  // 3. Low-rank structure: SVD of a photo + the exponential wall
-  // =====================================================================
-  // One-sided Jacobi SVD. A is m x n (row-major Float64Array); returns columns sorted by singular value,
-  // as {US: n columns of length m (sigma * u), V: n columns of length n, sig}.
-  function svd(A, m, n) {
-    const U = Array.from({ length: n }, (_, j) => { const c = new Float64Array(m); for (let i = 0; i < m; i++) c[i] = A[i * n + j]; return c; });
-    const V = Array.from({ length: n }, (_, j) => { const c = new Float64Array(n); c[j] = 1; return c; });
-    for (let sweep = 0; sweep < 30; sweep++) {
-      let off = 0;
-      for (let p = 0; p < n - 1; p++) for (let q = p + 1; q < n; q++) {
-        const up = U[p], uq = U[q];
-        let a = 0, b = 0, g = 0;
-        for (let i = 0; i < m; i++) { a += up[i] * up[i]; b += uq[i] * uq[i]; g += up[i] * uq[i]; }
-        if (Math.abs(g) <= 1e-12 * Math.sqrt(a * b) || g === 0) continue;
-        off = Math.max(off, Math.abs(g) / Math.sqrt(a * b));
-        const z = (b - a) / (2 * g), t = Math.sign(z || 1) / (Math.abs(z) + Math.sqrt(1 + z * z));
-        const c = 1 / Math.sqrt(1 + t * t), sn = c * t;
-        for (let i = 0; i < m; i++) { const x = up[i], y = uq[i]; up[i] = c * x - sn * y; uq[i] = sn * x + c * y; }
-        const vp = V[p], vq = V[q];
-        for (let i = 0; i < n; i++) { const x = vp[i], y = vq[i]; vp[i] = c * x - sn * y; vq[i] = sn * x + c * y; }
-      }
-      if (off < 1e-9) break;
-    }
-    const sig = U.map((c) => Math.hypot(...c));
-    const order = sig.map((_, i) => i).sort((i, j) => sig[j] - sig[i]);
-    return { US: order.map((i) => U[i]), V: order.map((i) => V[i]), sig: order.map((i) => sig[i]) };
-  }
-
-  function buildLowRank(host) {
-    const w = 90, hgt = 126, MAXR = 40;
-    const orig = h("canvas", { width: w, height: hgt, class: "lr-canvas", "aria-label": T("lr.origAria") });
-    const recon = h("canvas", { width: w, height: hgt, class: "lr-canvas", "aria-label": T("lr.recAria") });
-    const rank = h("input", { type: "range", min: 1, max: MAXR, value: 5, class: "range", "aria-label": T("lr.patternsAria") });
-    const rankOut = h("strong", {}, "5");
-    const rankNote = h("p", { class: "lr-note" });
-    let dec = null;
-
-    function drawRecon() {
-      const r = +rank.value; rankOut.textContent = r;
-      const kept = r * (w + hgt), total = w * hgt;
-      rankNote.textContent = T("lr.note", { kept: num(kept), total: num(total), pct: num(100 * kept / total) });
-      if (!dec) return;
-      const ctx = recon.getContext("2d"), img = ctx.createImageData(w, hgt);
-      for (let i = 0; i < hgt; i++) for (let j = 0; j < w; j++) {
-        let v = 0;
-        for (let k = 0; k < r; k++) v += dec.US[k][i] * dec.V[k][j];
-        const g = clamp(Math.round(v), 0, 255), o = (i * w + j) * 4;
-        img.data[o] = img.data[o + 1] = img.data[o + 2] = g; img.data[o + 3] = 255;
-      }
-      ctx.putImageData(img, 0, 0);
-    }
-    rank.addEventListener("input", drawRecon);
-    const img = new Image();
-    img.onload = () => {
-      const ctx = orig.getContext("2d");
-      ctx.drawImage(img, 0, 0, w, hgt);
-      let data;
-      try { data = ctx.getImageData(0, 0, w, hgt).data; } catch (e) { return; }
-      const A = new Float64Array(w * hgt);
-      for (let i = 0; i < w * hgt; i++) A[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
-      const gimg = ctx.createImageData(w, hgt);
-      for (let i = 0; i < w * hgt; i++) { gimg.data[i * 4] = gimg.data[i * 4 + 1] = gimg.data[i * 4 + 2] = A[i]; gimg.data[i * 4 + 3] = 255; }
-      ctx.putImageData(gimg, 0, 0);
-      dec = svd(A, hgt, w);
-      drawRecon();
-    };
-    img.src = S.person.photo;
-
-    // --- exponential wall ---
-    const CHI = 32, BYTES = 16; // complex double; tensor network bond dimension
-    const qubits = h("input", { type: "range", min: 1, max: 80, value: 10, class: "range", "aria-label": T("lr.qubitsAria") });
-    const qOut = h("strong", {}, "10");
-    const exactBar = h("span", { class: "wall-fill exact" }), tnBar = h("span", { class: "wall-fill tn" });
-    const exactVal = h("span", { class: "wall-val" }), tnVal = h("span", { class: "wall-val" });
-    const verdict = h("p", { class: "ex-status", "aria-live": "polite" });
-    const fmtBytes = (b) => {
-      const u = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-      let i = 0; while (b >= 1000 && i < u.length - 1) { b /= 1000; i++; }
-      return `${num(b, b >= 100 ? 0 : 1)} ${u[i]}${i === u.length - 1 && b >= 1000 ? "+" : ""}`;
-    };
-    const LOGMAX = Math.log10(BYTES * 2 ** 80);
-    function drawWall() {
-      const n = +qubits.value; qOut.textContent = n;
-      const exact = BYTES * 2 ** n, tn = BYTES * n * 2 * Math.min(CHI, 2 ** Math.floor(n / 2)) ** 2;
-      const pct = (b) => `${clamp(Math.log10(b) / LOGMAX * 100, 1.5, 100)}%`;
-      exactBar.style.width = pct(exact); tnBar.style.width = pct(tn);
-      exactVal.textContent = fmtBytes(exact); tnVal.textContent = fmtBytes(tn);
-      exactBar.classList.toggle("over", exact > 1e16);
-      verdict.textContent =
-        exact <= 16e9 ? T("lr.v1", { n }) :
-        exact <= 1e16 ? T("lr.v2", { n }) :
-        exact <= 2e23 ? T("lr.v3", { n, tn: fmtBytes(tn) }) :
-        T("lr.v4", { n, tn: fmtBytes(tn) });
-    }
-    qubits.addEventListener("input", drawWall);
-
-    host.append(
-      h("div", { class: "lr-grid" },
-        h("div", { class: "lr-photo" },
-          h("p", { class: "viz-label" }, "A photo is a big table of numbers…"),
-          h("div", { class: "lr-pair" },
-            h("figure", {}, orig, h("figcaption", {}, T("lr.original"))),
-            h("figure", {}, recon, h("figcaption", {}, T("lr.rebuilt")))),
-          h("label", { class: "range-row" }, h("span", {}, T("lr.patterns"), rankOut), rank),
-          rankNote),
-        h("div", { class: "lr-wall" },
-          h("p", { class: "viz-label" }, "…and so is a quantum state, but a much bigger one"),
-          h("label", { class: "range-row" }, h("span", {}, T("lr.qubits"), qOut), qubits),
-          h("div", { class: "wall-row" }, h("span", { class: "wall-name" }, T("lr.exact")), h("span", { class: "wall-track" }, exactBar), exactVal),
-          h("div", { class: "wall-row" }, h("span", { class: "wall-name" }, T("lr.tn")), h("span", { class: "wall-track" }, tnBar), tnVal),
-          verdict,
-          h("p", { class: "ex-fine" }, T("lr.fine"))))
-    );
-    drawRecon(); drawWall();
-  }
-
-  // =====================================================================
-  // 4. Quantum computing: the 15-to-1 magic-state factory
+  // 3. Quantum computing: the 15-to-1 magic-state factory
   // =====================================================================
   // Input i (1..15) is wired to check j when bit j of i is set (the columns of the [15,11,3] Hamming
   // code's parity-check matrix). A batch passes when the faulty inputs' numbers XOR to zero; it then
@@ -646,8 +541,8 @@
   // =====================================================================
   // Tabs
   // =====================================================================
-  const BUILDERS = { qc: buildQubit, po: buildLandscape, lr: buildLowRank, qcomp: buildFactory };
-  const COLORS = { qc: "var(--blue)", po: "var(--green)", lr: "var(--yellow)", qcomp: "var(--coral)" };
+  const BUILDERS = { qc: buildQubit, po: buildLandscape, qcomp: buildFactory };
+  const COLORS = { qc: "var(--blue)", po: "var(--green)", qcomp: "var(--coral)" };
   const keys = Object.keys(E);
   const tabs = document.getElementById("ex-tabs"), panels = document.getElementById("ex-panels");
   const pubById = Object.fromEntries(S.publications.map((p) => [p.id, p]));

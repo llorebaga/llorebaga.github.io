@@ -14,8 +14,8 @@ window.SITE = {
     role: { en: "Marie Skłodowska-Curie PhD Fellow", ca: "Investigador predoctoral Marie Skłodowska-Curie" },
     // The sentence under the name in the hero.
     tagline: {
-      en: "I study quantum systems through the lens of optimization, looking for the limits of what they can do.",
-      ca: "Estudio els sistemes quàntics des de l'òptica de l'optimització, buscant els límits del que poden fer."
+      en: "Finding the limits of quantum systems, and the protocols that reach them.",
+      ca: "Trobo els límits dels sistemes quàntics, i els protocols que hi arriben."
     },
     affiliations: [
       { name: "CTU Prague", detail: { en: "Optimization group, AIC", ca: "Grup d'Optimització, AIC" }, url: "https://www.aic.fel.cvut.cz/research-areas/optimization" },
@@ -75,12 +75,10 @@ window.SITE = {
       ca: "Nou preprint: <em>Low-rank geometry of two-qubit gates</em>." } }
   ],
 
-  // Research areas in the research map. mapLabel: the lines inside the map bubble.
-  // The map is laid out automatically: the `hub` topic sits in the middle and the others around it,
-  // at `angle` degrees (0 = right, 90 = down). Papers are placed between the topics they list, so two
-  // topics that share papers must be neighbours around the hub.
-  // all: true makes the hub stand for every paper on the map (papers then list only the outer topics).
-  // Quantum side on the left (control, gates, fault tolerance), methods on the right.
+  // Research areas in the research map, drawn as a Venn diagram: one circle per topic, its centre at
+  // `angle` degrees from the middle (0 = right, 90 = down), its name (mapLabel lines) near its rim, towards `labelAngle`.
+  // Each paper sits in the region of exactly the topics it lists. The `hub` topic is the label where
+  // all circles meet; with all: true it stands for every paper (papers do not list it).
   topics: {
     limits: {
       hub: true,
@@ -93,7 +91,9 @@ window.SITE = {
       }
     },
     qc: {
-      angle: -130,
+      angle: -150,
+      labelAngle: -118,
+      color: "var(--blue)",
       name: { en: "Quantum Control", ca: "Control quàntic" },
       mapLabel: { en: ["Quantum", "Control"], ca: ["Control", "quàntic"] },
       blurb: {
@@ -102,39 +102,24 @@ window.SITE = {
       }
     },
     po: {
-      angle: -50,
+      angle: -30,
+      labelAngle: -62,
+      color: "var(--green)",
       name: { en: "Polynomial Optimization", ca: "Optimització polinòmica" },
       mapLabel: { en: ["Polynomial", "Optimization"], ca: ["Optimització", "polinòmica"] },
       blurb: {
-        en: "Moment–SOS hierarchies: convex relaxations that give globally optimal solutions and certified bounds.",
-        ca: "Jerarquies de moments–SOS: relaxacions convexes que donen solucions òptimes globals i cotes certificades."
-      }
-    },
-    lr: {
-      angle: 50,
-      name: { en: "Low-rank Structure", ca: "Estructura de rang baix" },
-      mapLabel: { en: ["Low-rank", "Structure"], ca: ["Estructura", "de rang baix"] },
-      blurb: {
-        en: "Tensor networks and tensor decompositions (MPOs, tensor trains, CP rank) that make large problems tractable.",
-        ca: "Xarxes de tensors i descomposicions tensorials (MPO, tensor trains, rang CP) que fan tractables problemes molt grans."
-      }
-    },
-    gates: {
-      angle: 130,
-      name: { en: "Quantum Gates", ca: "Portes quàntiques" },
-      mapLabel: { en: ["Quantum", "Gates"], ca: ["Portes", "quàntiques"] },
-      blurb: {
-        en: "The basic operations of a quantum computer: how far a gate is from simpler ones, how well it can be imitated, and how to synthesize it at scale.",
-        ca: "Les operacions bàsiques d'un ordinador quàntic: a quina distància és una porta de portes més senzilles, com de bé es pot imitar i com sintetitzar-la a gran escala."
+        en: "Moment–SOS hierarchies: convex relaxations that give globally optimal solutions and certified bounds, made to scale by exploiting structure such as low rank.",
+        ca: "Jerarquies de moments–SOS: relaxacions convexes que donen solucions òptimes globals i cotes certificades, i que escalen aprofitant estructura com el rang baix."
       }
     },
     qcomp: {
-      angle: 180,
-      name: { en: "Fault Tolerance", ca: "Tolerància a errors" },
-      mapLabel: { en: ["Fault", "Tolerance"], ca: ["Tolerància", "a errors"] },
+      angle: 90,
+      color: "var(--coral)",
+      name: { en: "Quantum Computing", ca: "Computació quàntica" },
+      mapLabel: { en: ["Quantum", "Computing"], ca: ["Computació", "quàntica"] },
       blurb: {
-        en: "Fault-tolerant quantum computing: how much it costs to produce the resources, such as magic states, that make universal quantum computation possible.",
-        ca: "Computació quàntica tolerant a errors: quant costa produir els recursos, com els estats màgics, que fan possible la computació quàntica universal."
+        en: "Gates and fault tolerance: how hard an entangling gate really is, and how few noisy ingredients a magic-state factory can get away with.",
+        ca: "Portes i tolerància a errors: com de difícil és de debò una porta entrellaçadora, i amb quants pocs ingredients sorollosos pot funcionar una fàbrica d'estats màgics."
       }
     }
   },
@@ -181,7 +166,7 @@ window.SITE = {
       date: "2026-11-05",
       status: "published",
       firstAuthor: true,
-      topics: ["qc", "lr"],
+      topics: ["qc", "qcomp"],
       links: { journal: "https://doi.org/10.1103/nrx9-9p92", code: "https://github.com/llorebaga/LR_2qubit" },
       cite: { journal: "APS Open Science", volume: "1", number: "000206", doi: "10.1103/nrx9-9p92" },
       plain: {
@@ -290,7 +275,7 @@ window.SITE = {
       date: "2026-04-19",
       status: "preprint",
       firstAuthor: true,
-      topics: ["po", "lr"],
+      topics: ["po"],
       links: { arxiv: "https://arxiv.org/abs/2604.17563", code: "https://github.com/llorebaga/SLPOP" },
       plain: {
         hook: { en: "Optimizing functions that are computed step by step, like a chain.", ca: "Optimitzar funcions que es calculen pas a pas, com una cadena." },
@@ -345,7 +330,7 @@ window.SITE = {
       date: "2025-12-09",
       status: "published",
       firstAuthor: true,
-      topics: ["qc", "lr"],
+      topics: ["qc"],
       links: { journal: "https://journals.aps.org/pra/abstract/10.1103/9mfk-gg3x", code: "https://github.com/llorebaga/QCMPO" },
       cite: { journal: "Physical Review A", volume: "112", number: "062612", doi: "10.1103/9mfk-gg3x" },
       plain: {
@@ -373,7 +358,7 @@ window.SITE = {
       date: "2025-12-09",
       status: "preprint",
       firstAuthor: true,
-      topics: ["po", "lr"],
+      topics: ["po"],
       links: { arxiv: "https://arxiv.org/abs/2512.08394", code: "https://github.com/llorebaga/LRPOP" },
       plain: {
         hook: { en: "When a polynomial hides a simple structure, its global minimum can be found at huge scale.", ca: "Quan un polinomi amaga una estructura senzilla, se'n pot trobar el mínim global a gran escala." },
@@ -508,22 +493,24 @@ window.SITE = {
   explainers: {
     qc: {
       tab: { en: "Steering qubits", ca: "Guiar qubits" },
-      title: { en: "Steering a qubit", ca: "Guiar un qubit" },
+      title: { en: "Steering a qubit, and its speed limit", ca: "Guiar un qubit, i el seu límit de velocitat" },
       body: {
         en: [
           "A qubit, the building block of a quantum computer, can be pictured as an arrow pointing somewhere on a sphere. North means 0, south means 1, and every direction in between is a quantum superposition of the two.",
-          "We move the arrow with carefully shaped pulses of microwaves or laser light. Quantum control is the art of designing those pulses so the qubit ends up exactly where we want, as fast and as reliably as possible, and for machines with many qubits at once."
+          "We move the arrow with carefully shaped pulses of microwaves or laser light: the stronger the pulse, the faster the arrow turns. Quantum control designs those pulses so the qubit ends up exactly where we want.",
+          "Pulses cannot be made arbitrarily strong, so there is a speed limit: below a certain time, no pulse at all can flip the qubit. Finding limits like this one, and pulses that really reach them, is what my research is about, for systems far bigger than one qubit."
         ],
         ca: [
           "Un qubit, la peça bàsica d'un ordinador quàntic, es pot imaginar com una fletxa que apunta cap a algun lloc d'una esfera. El nord vol dir 0, el sud vol dir 1, i qualsevol direcció entremig és una superposició quàntica de tots dos.",
-          "Movem la fletxa amb polsos de microones o de llum làser dissenyats amb molta cura. El control quàntic és l'art de dissenyar aquests polsos perquè el qubit acabi exactament on volem, tan ràpid i de manera tan fiable com sigui possible, i en màquines amb molts qubits alhora."
+          "Movem la fletxa amb polsos de microones o de llum làser dissenyats amb molta cura: com més intens és el pols, més de pressa gira la fletxa. El control quàntic dissenya aquests polsos perquè el qubit acabi exactament on volem.",
+          "Els polsos no poden ser tan intensos com vulguem, així que hi ha un límit de velocitat: per sota d'un cert temps, cap pols no pot capgirar el qubit. Trobar límits com aquest, i polsos que hi arribin de debò, és el que fa la meva recerca, per a sistemes molt més grans que un sol qubit."
         ]
       },
       tryIt: {
-        en: "Drag the bars to shape the pulse and steer the arrow from north (0) to the target at the south pole (1). Or press Optimize and let the computer search for you. Drag the sphere to rotate it.",
-        ca: "Arrossega les barres per donar forma al pols i porta la fletxa del nord (0) fins a l'objectiu, al pol sud (1). O prem Optimitza i deixa que l'ordinador ho busqui per tu. Arrossega l'esfera per girar-la."
+        en: "Drag the bars to shape the pulse and steer the arrow from north (0) to the target at the south pole (1), or press Optimize. Then shrink the time allowed and see what happens below the speed limit. Drag the sphere to rotate it.",
+        ca: "Arrossega les barres per donar forma al pols i porta la fletxa del nord (0) fins a l'objectiu, al pol sud (1), o prem Optimitza. Després redueix el temps disponible i mira què passa per sota del límit de velocitat. Arrossega l'esfera per girar-la."
       },
-      papers: ["QCPOP", "UGS", "RCQC", "RSE", "RCS"]
+      papers: ["QCPOP", "UGS", "RCQC", "RCS", "RSE", "TEMPO"]
     },
     po: {
       tab: { en: "Finding the true best", ca: "Trobar el millor de veritat" },
@@ -531,11 +518,13 @@ window.SITE = {
       body: {
         en: [
           "Designing the best pulse is an optimization problem: among countless options, find the one that works best. Picture every option as a point in a landscape, where lower is better.",
-          "Most methods behave like a ball rolling downhill. They quickly find a valley, but not necessarily the deepest one. Polynomial optimization works differently: it raises a mathematical floor from below that can never cross the landscape. Where the floor stops is a proof that nothing lies lower, a certified global optimum."
+          "Most methods behave like a ball rolling downhill. They quickly find a valley, but not necessarily the deepest one. Polynomial optimization works differently: it raises a mathematical floor from below that can never cross the landscape. Where the floor stops is a proof that nothing lies lower, a certified global optimum.",
+          "In my research the landscape is how well a quantum operation can work, and the floor is a proof of the best it can ever do. That turns “this pulse is good” into “no pulse is better”."
         ],
         ca: [
           "Dissenyar el millor pols és un problema d'optimització: entre infinitat d'opcions, cal trobar la que funciona millor. Imagina cada opció com un punt d'un paisatge, on més avall vol dir millor.",
-          "La majoria de mètodes es comporten com una bola que rodola pendent avall: troben ràpidament una vall, però no necessàriament la més profunda. L'optimització polinòmica funciona d'una altra manera: aixeca des de sota un terra matemàtic que mai no pot travessar el paisatge. On s'atura el terra hi ha la prova que no hi ha res més avall: un òptim global certificat."
+          "La majoria de mètodes es comporten com una bola que rodola pendent avall: troben ràpidament una vall, però no necessàriament la més profunda. L'optimització polinòmica funciona d'una altra manera: aixeca des de sota un terra matemàtic que mai no pot travessar el paisatge. On s'atura el terra hi ha la prova que no hi ha res més avall: un òptim global certificat.",
+          "A la meva recerca, el paisatge és com de bé pot funcionar una operació quàntica, i el terra és la prova del millor que mai podrà fer. Així «aquest pols és bo» es converteix en «cap pols no és millor»."
         ]
       },
       tryIt: {
@@ -543,25 +532,6 @@ window.SITE = {
         ca: "Fes clic a qualsevol punt del paisatge per deixar caure una bola i després prem Certifica per aixecar el terra. Prova un paisatge nou per tornar-ho a veure."
       },
       papers: ["QCPOP", "UGS", "RCQC", "LRPOP", "ComPOP"]
-    },
-    lr: {
-      tab: { en: "Hidden simplicity", ca: "Simplicitat amagada" },
-      title: { en: "Hidden simplicity", ca: "Simplicitat amagada" },
-      body: {
-        en: [
-          "Exact descriptions of quantum systems grow exponentially: every extra qubit doubles the amount of numbers needed. Around 50 qubits, even the largest supercomputers run out of memory.",
-          "Luckily, many real problems hide a simple structure. Just as a photo can be rebuilt from a handful of simple patterns, tensor networks and low-rank decompositions describe enormous objects with a tiny fraction of the numbers. My work exploits this structure so that control and optimization methods scale to large systems."
-        ],
-        ca: [
-          "Les descripcions exactes dels sistemes quàntics creixen exponencialment: cada qubit de més duplica la quantitat de nombres necessaris. Cap als 50 qubits, fins i tot els superordinadors més grans es queden sense memòria.",
-          "Per sort, molts problemes reals amaguen una estructura senzilla. De la mateixa manera que una foto es pot reconstruir amb un grapat de patrons simples, les xarxes de tensors i les descomposicions de rang baix descriuen objectes enormes amb una fracció minúscula dels nombres. La meva feina aprofita aquesta estructura perquè els mètodes de control i d'optimització escalin a sistemes grans."
-        ]
-      },
-      tryIt: {
-        en: "Rebuild the photo from more or fewer patterns, then add qubits and watch the exact description hit an exponential wall.",
-        ca: "Reconstrueix la foto amb més o menys patrons i després afegeix qubits per veure com la descripció exacta topa amb un mur exponencial."
-      },
-      papers: ["TEMPO", "LR2Q", "LRPOP", "ComPOP"]
     },
     qcomp: {
       tab: { en: "Making magic", ca: "Fabricar màgia" },
