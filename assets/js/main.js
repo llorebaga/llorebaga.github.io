@@ -113,12 +113,27 @@
     const a = rad(S.topics[k].angle ?? (-90 + (360 * i) / sets.length));
     return [k, [Math.cos(a) * D, Math.sin(a) * D, a]];
   }));
-  // Topic names: inside the circle near its rim, towards `labelAngle` (default: away from the middle).
-  const labelAt = (k) => {
-    const a = S.topics[k].labelAngle != null ? rad(S.topics[k].labelAngle) : CEN[k][2];
-    return [CEN[k][0] + Math.cos(a) * (RC - 54), CEN[k][1] + Math.sin(a) * (RC - 54)];
+  const map = $("#map");
+  const lines = (k, x, y, size) => {
+    const words = tr(S.topics[k].mapLabel) || tr(S.topics[k].name).split(" ");
+    return words.map((w, i) => s("tspan", { x, y: y + (i - (words.length - 1) / 2) * size * 1.25 }, w));
   };
-  const keepOut = [[0, 0, hubKey ? 88 : 0], ...sets.map((k) => [...labelAt(k), 66])]; // [x, y, r] papers avoid
+  // Topic names: inside the circle near its rim, towards `labelAngle` (default: away from the middle),
+  // pulled in until the whole name, as rendered, fits inside its own circle.
+  const LABEL = {};
+  for (const k of sets) {
+    const probe = s("text", { class: "m-set-label", visibility: "hidden" }, lines(k, 0, 8, 24));
+    map.append(probe);
+    const b = probe.getBBox();
+    probe.remove();
+    const a = S.topics[k].labelAngle != null ? rad(S.topics[k].labelAngle) : CEN[k][2], [cx, cy] = CEN[k];
+    const corners = [[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]];
+    let t = RC - 30, lx, ly;
+    do { lx = cx + Math.cos(a) * t; ly = cy + Math.sin(a) * t; t -= 2; }
+    while (t > 0 && corners.some(([dx, dy]) => Math.hypot(lx + dx - cx, ly + dy - cy) > RC - 16));
+    LABEL[k] = { at: [lx, ly], zone: [lx + b.x + b.width / 2, ly + b.y + b.height / 2, Math.max(b.width, b.height) / 2 - 4] };
+  }
+  const keepOut = [[0, 0, hubKey ? 88 : 0], ...sets.map((k) => LABEL[k].zone)]; // [x, y, r] papers avoid
 
   // How far (x, y) is from leaving the region of exactly the topics `ts` (negative: outside it).
   function depth(x, y, ts) {
@@ -156,14 +171,9 @@
     }
   }
 
-  const map = $("#map");
   const litables = []; // {node, keys:Set}
   const reg = (node, keys) => { litables.push({ node, keys: new Set(keys) }); return node; };
   const gSets = s("g"), gNames = s("g"), gPapers = s("g");
-  const lines = (k, x, y, size) => {
-    const words = tr(S.topics[k].mapLabel) || tr(S.topics[k].name).split(" ");
-    return words.map((w, i) => s("tspan", { x, y: y + (i - (words.length - 1) / 2) * size * 1.25 }, w));
-  };
   const hookTopic = (g, k) => {
     g.addEventListener("mouseenter", () => preview({ topic: k }));
     g.addEventListener("mouseleave", restore);
@@ -172,7 +182,7 @@
     return g;
   };
   sets.forEach((k, i) => {
-    const [cx, cy] = CEN[k], [lx, ly] = labelAt(k);
+    const [cx, cy] = CEN[k], [lx, ly] = LABEL[k].at;
     gSets.append(reg(hookTopic(s("g", {
       class: "m-set", tabindex: 0, role: "button", "data-topic": k, style: `--c:${S.topics[k].color || "var(--blue)"};--d:${i * 0.14}s`,
       "aria-label": T("map.topicAria", { name: tr(S.topics[k].name) })
