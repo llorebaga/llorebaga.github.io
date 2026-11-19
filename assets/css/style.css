@@ -121,9 +121,11 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.2; marg
 .nav { display: flex; align-items: center; gap: 10px; height: 64px; }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 17px; color: var(--ink) !important; text-decoration: none; white-space: nowrap; }
 .brand-mark { width: 26px; height: 26px; }
-.brand-mark circle:nth-child(1) { fill: var(--blue); }
-.brand-mark circle:nth-child(2) { fill: var(--green); }
-.brand-mark circle:nth-child(3) { fill: var(--yellow); }
+/* A small version of the research map: three overlapping circles in the topic colours. */
+.brand-mark circle { fill-opacity: .4; stroke-width: 2.2; }
+.brand-mark circle:nth-child(1) { fill: var(--blue); stroke: var(--blue); }
+.brand-mark circle:nth-child(2) { fill: var(--green); stroke: var(--green); }
+.brand-mark circle:nth-child(3) { fill: var(--coral); stroke: var(--coral); }
 .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; margin: 0 0 0 auto; padding: 0; }
 .nav-links a {
   display: block; padding: 8px 12px; border-radius: 999px;
