@@ -99,80 +99,163 @@
   $("#research-text").innerHTML = tr(S.research);
 
   // ---------- research map ----------
-  // Geometry follows the original hand-made map; extra topics set `at` and `r` in data.js.
-  const DEFAULT_POS = { qc: [560, 150], po: [250, 520], lr: [870, 520] };
-  const TOPIC_POS = Object.fromEntries(topicKeys.map((k) => [k, S.topics[k].at || DEFAULT_POS[k]]));
-  const TOPIC_R = Object.fromEntries(topicKeys.map((k) => [k, S.topics[k].r || 100]));
-  const CLUSTERS = {
-    "qc+po": { at: [350, 330], edges: [["qc", [484, 215, 418, 271]], ["po", [297, 431, 308, 410]]] },
-    "qc+lr": { at: [770, 330], edges: [["qc", [636, 215, 702, 271]], ["lr", [823, 431, 812, 410]]] },
-    "po+lr": { at: [560, 610], edges: [["po", [346, 548, 474, 585]], ["lr", [774, 548, 646, 585]]] }
-  };
-  const clusterKey = (topics) => {
-    const t = [...topics].sort((a, b) => topicKeys.indexOf(a) - topicKeys.indexOf(b));
-    return t.length === 2 ? t.join("+") : null;
-  };
+  // A hub mapLayout, computed from data.js: the `hub` topic sits in the middle and the other topics
+  // around it at their `angle`. A paper sits where its topics meet: on the spoke between the hub
+  // and a topic, between two outer topics, or next to its single topic. No coordinates by hand.
+  const onMap = (p) => p.topics.length > 0 && p.map !== false;
+  const groupKey = (topics) => [...topics].sort((a, b) => topicKeys.indexOf(a) - topicKeys.indexOf(b)).join("+");
+  const clusterKey = (topics) => (topics.length > 1 ? groupKey(topics) : null);
+  const BR = 34, MGAP = 16;                      // paper radius, gap between shapes
+  const rad = (deg) => (deg * Math.PI) / 180;
+  const dir = (a) => [Math.cos(a), Math.sin(a)];
+  const hubKey = topicKeys.find((k) => S.topics[k].hub) || topicKeys[0];
+  const sats = topicKeys.filter((k) => k !== hubKey);
+  const TOPIC_R = Object.fromEntries(topicKeys.map((k) => [k, S.topics[k].r || (k === hubKey ? 104 : 94)]));
+  const ANGLE = Object.fromEntries(sats.map((k, i) => [k, rad(S.topics[k].angle ?? (-90 + (360 * i) / sats.length))]));
+
+  // Papers grouped by the set of topics they touch, oldest first so positions stay put as papers are added.
+  const mapGroups = new Map();
+  S.publications.filter(onMap).sort((a, b) => (a.date > b.date ? 1 : -1)).forEach((p) => {
+    const k = groupKey(p.topics);
+    if (!mapGroups.has(k)) mapGroups.set(k, { key: k, topics: k.split("+"), papers: [] });
+    mapGroups.get(k).papers.push(p);
+  });
+  // Papers in a group sit on a small ring inside a dashed circle.
+  const ringR = (n) => (n < 2 ? 0 : n === 2 ? BR + 4 : (BR + 4) / Math.sin(Math.PI / n));
+  const clusterR = (n) => ringR(n) + BR + 9;
+
+  // Distance from the hub to each outer topic: room for the shared papers on that spoke.
+  const spokeGroup = (k) => mapGroups.get(groupKey([hubKey, k]));
+  const needed = (k) => (spokeGroup(k) ? TOPIC_R[hubKey] + 2 * MGAP + 2 * clusterR(spokeGroup(k).papers.length) + TOPIC_R[k] : 0);
+  const longSpoke = Math.max(0, ...sats.map(needed));
+  const TOPIC_POS = { [hubKey]: [0, 0] };
+  sats.forEach((k) => {
+    const d = spokeGroup(k) ? longSpoke : TOPIC_R[hubKey] + TOPIC_R[k] + 100;
+    const [ux, uy] = dir(ANGLE[k]);
+    TOPIC_POS[k] = [ux * d, uy * d];
+  });
+
+  // Where each group goes: {group, at, r, papers: [{p, at}]}, or {solo: topic} for a single-topic paper.
+  const mapLayout = [];
+  const hubSolo = [];
+  for (const g of mapGroups.values()) {
+    const ts = g.topics, n = g.papers.length;
+    if (ts.length === 1 && ts[0] === hubKey) { hubSolo.push(...g.papers); continue; }
+    if (ts.length === 1) {
+      // Fanned around the outside of its topic, away from the hub.
+      const k = ts[0], [tx, ty] = TOPIC_POS[k], d = TOPIC_R[k] + MGAP + BR;
+      const step = n === 2 ? rad(120) : rad(60);
+      g.papers.forEach((p, i) => {
+        const a = ANGLE[k] + (i - (n - 1) / 2) * step;
+        mapLayout.push({ group: g, solo: k, papers: [{ p, at: [tx + Math.cos(a) * d, ty + Math.sin(a) * d] }] });
+      });
+      continue;
+    }
+    let at, base;
+    if (ts.includes(hubKey) && ts.length === 2) {
+      // On the spoke, next to the hub's rim.
+      const k = ts[0] === hubKey ? ts[1] : ts[0], [ux, uy] = dir(ANGLE[k]);
+      const d = TOPIC_R[hubKey] + MGAP + clusterR(n);
+      at = [ux * d, uy * d];
+      base = ANGLE[k] + (n === 2 ? Math.PI / 2 : 0);
+    } else {
+      // Between outer topics, pushed out until it clears the hub.
+      const cs = ts.map((k) => TOPIC_POS[k]);
+      const mx = cs.reduce((s, c) => s + c[0], 0) / cs.length, my = cs.reduce((s, c) => s + c[1], 0) / cs.length;
+      const m = Math.hypot(mx, my) || 1, d = Math.max(m, TOPIC_R[hubKey] + clusterR(n) + 40);
+      at = [(mx / m) * d, (my / m) * d];
+      base = ts.length === 2 ? Math.atan2(cs[1][1] - cs[0][1], cs[1][0] - cs[0][0]) : Math.atan2(my, mx);
+    }
+    const rr = ringR(n);
+    mapLayout.push({ group: g, at, r: clusterR(n), papers: g.papers.map((p, i) => {
+      const a = base + (2 * Math.PI * i) / n;
+      return { p, at: [at[0] + Math.cos(a) * rr, at[1] + Math.sin(a) * rr] };
+    }) });
+  }
+  // Papers on the hub alone go in the free gaps between spokes (not a gap that an outer-pair group fills).
+  if (hubSolo.length) {
+    const norm = (a) => ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    const spokes = sats.map((k) => norm(ANGLE[k])).sort((a, b) => a - b);
+    const gapsAll = spokes.length ? spokes.map((a, i) => {
+      const b = i + 1 < spokes.length ? spokes[i + 1] : spokes[0] + 2 * Math.PI;
+      return { mid: (a + b) / 2, width: b - a };
+    }) : [{ mid: -Math.PI / 2, width: 2 * Math.PI }];
+    const angDist = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+    const pairDirs = mapLayout.filter((l) => l.at && !l.group.topics.includes(hubKey)).map((l) => Math.atan2(l.at[1], l.at[0]));
+    let gaps = gapsAll.filter((gp) => !pairDirs.some((a) => angDist(a, gp.mid) < gp.width / 2));
+    if (!gaps.length) gaps = gapsAll;
+    const d = TOPIC_R[hubKey] + MGAP + BR, step = 2 * Math.asin((BR + 4) / d);
+    const per = gaps.map(() => []);
+    hubSolo.forEach((p, i) => per[i % gaps.length].push(p));
+    per.forEach((ps, gi) => ps.forEach((p, i) => {
+      const a = gaps[gi].mid + (i - (ps.length - 1) / 2) * step;
+      mapLayout.push({ group: mapGroups.get(hubKey), solo: hubKey, papers: [{ p, at: [Math.cos(a) * d, Math.sin(a) * d] }] });
+    }));
+  }
+
   const map = $("#map");
   const litables = []; // {node, keys:Set}
   const reg = (node, keys) => { litables.push({ node, keys: new Set(keys) }); return node; };
-
+  const rim = ([ax, ay], ra, [bx, by], rb) => {
+    const d = Math.hypot(bx - ax, by - ay) || 1, ux = (bx - ax) / d, uy = (by - ay) / d;
+    return { x1: ax + ux * ra, y1: ay + uy * ra, x2: bx - ux * rb, y2: by - uy * rb };
+  };
+  const mapExtent = [];                            // [x, y, r] of every shape, for the viewBox
   const gClusters = s("g"), gEdges = s("g"), gTopics = s("g"), gPapers = s("g");
-  for (const [key, c] of Object.entries(CLUSTERS)) {
-    const [a, b] = key.split("+");
-    gClusters.append(reg(s("circle", { class: "m-cluster", cx: c.at[0], cy: c.at[1], r: 90 }), [`c:${key}`, `t:${a}`, `t:${b}`]));
-    for (const [t, [x1, y1, x2, y2]] of c.edges) {
-      gEdges.append(reg(s("line", { class: "m-edge", x1, y1, x2, y2 }), [`c:${key}`, `t:${t}`, `e:${key}:${t}`]));
+
+  // Spokes without shared papers: a plain line from the hub to the topic.
+  for (const k of sats) if (!spokeGroup(k)) {
+    gEdges.append(reg(s("line", { class: "m-edge", ...rim(TOPIC_POS[hubKey], TOPIC_R[hubKey], TOPIC_POS[k], TOPIC_R[k]) }), [`t:${hubKey}`, `t:${k}`]));
+  }
+  for (const l of mapLayout) {
+    if (l.solo) {
+      const { p, at } = l.papers[0];
+      gEdges.append(reg(s("line", { class: "m-edge", ...rim(TOPIC_POS[l.solo], TOPIC_R[l.solo], at, BR) }), [`p:${p.id}`, `t:${l.solo}`]));
+      continue;
+    }
+    const ck = l.group.key;
+    gClusters.append(reg(s("circle", { class: "m-cluster", cx: l.at[0], cy: l.at[1], r: l.r }), [`c:${ck}`, ...l.group.topics.map((t) => `t:${t}`)]));
+    mapExtent.push([...l.at, l.r]);
+    for (const t of l.group.topics) {
+      gEdges.append(reg(s("line", { class: "m-edge", ...rim(l.at, l.r, TOPIC_POS[t], TOPIC_R[t]) }), [`c:${ck}`, `t:${t}`, `e:${ck}:${t}`]));
     }
   }
-  for (const [key, [cx, cy]] of Object.entries(TOPIC_POS)) {
-    const words = tr(S.topics[key].mapLabel) || tr(S.topics[key].name).split(" ");
+  for (const k of topicKeys) {
+    const [cx, cy] = TOPIC_POS[k];
+    const words = tr(S.topics[k].mapLabel) || tr(S.topics[k].name).split(" ");
     const text = s("text", { x: cx, y: cy - (words.length - 1) * 15 + 7 },
       ...words.map((w, i) => s("tspan", { x: cx, dy: i ? 30 : 0 }, w)));
-    const g = reg(s("g", { class: "m-topic", tabindex: 0, role: "button", "aria-label": T("map.topicAria", { name: tr(S.topics[key].name) }), "data-topic": key },
-      s("circle", { cx, cy, r: TOPIC_R[key] }), text), [`t:${key}`]);
-    g.addEventListener("mouseenter", () => preview({ topic: key }));
+    const g = reg(s("g", { class: `m-topic${k === hubKey ? " hub" : ""}`, tabindex: 0, role: "button", "aria-label": T("map.topicAria", { name: tr(S.topics[k].name) }), "data-topic": k },
+      s("circle", { cx, cy, r: TOPIC_R[k] }), text), [`t:${k}`]);
+    g.addEventListener("mouseenter", () => preview({ topic: k }));
     g.addEventListener("mouseleave", restore);
-    g.addEventListener("click", () => select({ topic: key }));
-    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select({ topic: key }); } });
+    g.addEventListener("click", () => select({ topic: k }));
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select({ topic: k }); } });
     gTopics.append(g);
+    mapExtent.push([cx, cy, TOPIC_R[k]]);
   }
-  // Topic-to-topic connectors (data.js: `links: ["qc"]`), drawn from rim to rim.
-  for (const a of topicKeys) for (const b of S.topics[a].links || []) {
-    if (!TOPIC_POS[b]) continue;
-    const [ax, ay] = TOPIC_POS[a], [bx, by] = TOPIC_POS[b], d = Math.hypot(bx - ax, by - ay);
-    const ux = (bx - ax) / d, uy = (by - ay) / d;
-    gEdges.append(reg(s("line", {
-      class: "m-edge",
-      x1: ax + ux * TOPIC_R[a], y1: ay + uy * TOPIC_R[a], x2: bx - ux * TOPIC_R[b], y2: by - uy * TOPIC_R[b]
-    }), [`t:${a}`, `t:${b}`]));
-  }
-  for (const p of S.publications) {
-    if (!p.map) continue;
-    const [cx, cy] = p.map;
+  for (const { p, at: [cx, cy] } of mapLayout.flatMap((l) => l.papers)) {
     const keys = [`p:${p.id}`, ...p.topics.map((t) => `t:${t}`)];
     const ck = clusterKey(p.topics);
     if (ck) keys.push(`c:${ck}`, ...p.topics.map((t) => `e:${ck}:${t}`));
-    else if (p.topics.length === 1) {
-      // Single-topic paper: draw a short connector to its topic bubble.
-      const [tx, ty] = TOPIC_POS[p.topics[0]], tr0 = TOPIC_R[p.topics[0]];
-      const dx = cx - tx, dy = cy - ty, d = Math.hypot(dx, dy);
-      gEdges.append(reg(s("line", {
-        class: "m-edge",
-        x1: tx + dx / d * tr0, y1: ty + dy / d * tr0, x2: cx - dx / d * 34, y2: cy - dy / d * 34
-      }), [`p:${p.id}`, `t:${p.topics[0]}`]));
-      keys.push(`e:solo:${p.id}`);
-    }
     const g = reg(s("g", {
       class: `m-paper ${p.status}${p.firstAuthor ? " first" : ""}`, tabindex: 0, role: "button",
       "aria-label": `${p.id}: ${p.title} (${T(`tag.${p.status}`)}${p.firstAuthor ? `, ${T("tag.first")}` : ""})`, "data-id": p.id
-    }, s("g", { class: "bubble" }, s("circle", { cx, cy, r: 34 }), s("text", { x: cx, y: cy }, p.id))), keys);
+    }, s("g", { class: "bubble" }, s("circle", { cx, cy, r: BR }), s("text", { x: cx, y: cy }, p.id))), keys);
     g.addEventListener("mouseenter", () => preview({ paper: p.id }));
     g.addEventListener("mouseleave", restore);
     g.addEventListener("click", (e) => { e.stopPropagation(); select({ paper: p.id }); });
     g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select({ paper: p.id }); } });
     gPapers.append(g);
+    mapExtent.push([cx, cy, BR * 1.2]); // room for the hover zoom
   }
   map.append(gClusters, gEdges, gTopics, gPapers);
+  {
+    const M = 14;
+    const x0 = Math.min(...mapExtent.map(([x, , r]) => x - r)) - M, x1 = Math.max(...mapExtent.map(([x, , r]) => x + r)) + M;
+    const y0 = Math.min(...mapExtent.map(([, y, r]) => y - r)) - M, y1 = Math.max(...mapExtent.map(([, y, r]) => y + r)) + M;
+    map.setAttribute("viewBox", [x0, y0, x1 - x0, y1 - y0].map((v) => Math.round(v)).join(" "));
+  }
 
   let selected = null; // {paper} | {topic} | null
   function highlight(state) {
@@ -225,7 +308,7 @@
     panel.replaceChildren(
       h("p", { class: "panel-hint" }, icon(ICONS.cursor), T("map.hint")),
       h("ul", { class: "panel-topics" }, ...topicKeys.map((k) => {
-        const n = S.publications.filter((p) => p.map && p.topics.includes(k)).length;
+        const n = S.publications.filter((p) => onMap(p) && p.topics.includes(k)).length;
         return h("li", {}, h("button", { type: "button", onclick: () => select({ topic: k }), onmouseenter: () => highlight({ topic: k }), onmouseleave: () => highlight(selected) },
           h("h3", {}, tr(S.topics[k].name)),
           h("p", {}, tr(S.topics[k].blurb)),
@@ -249,7 +332,7 @@
     );
   }
   function panelTopic(k) {
-    const papers = S.publications.filter((p) => p.map && p.topics.includes(k));
+    const papers = S.publications.filter((p) => onMap(p) && p.topics.includes(k));
     panel.replaceChildren(
       h("button", { class: "panel-back", type: "button", onclick: () => select(null) }, T("map.back")),
       h("div", { class: "panel-paper" },
@@ -435,7 +518,7 @@
       ...tr(p.plain.text).map((t) => h("p", {}, t)),
       h("div", { class: "links" },
         ...linkButtons(p),
-        p.map ? h("button", { class: "link-btn", type: "button", onclick: go(() => { select({ paper: p.id }); $("#research").scrollIntoView(); }) }, icon(ICONS.target), T("pubs.onMap")) : null,
+        onMap(p) ? h("button", { class: "link-btn", type: "button", onclick: go(() => { select({ paper: p.id }); $("#research").scrollIntoView(); }) }, icon(ICONS.target), T("pubs.onMap")) : null,
         h("button", { class: "link-btn", type: "button", onclick: () => openCite(p.id) }, icon(ICONS.quote), T("pubs.cite"))),
       h("details", { class: "story-abstract" }, h("summary", {}, T("story.abstract")), h("p", { lang: "en" }, p.abstract)));
     $(".story-scroll").scrollTop = 0;

@@ -78,6 +78,44 @@
       );
     },
 
+    // Cultivation: an encoded T state on a colour-code patch, checked by physical T gates;
+    // the checks in use catch at most half the faults their code allows.
+    MSC() {
+      // Triangular colour-code patch with qubits on a small lattice.
+      const A = [70, 40], B = [22, 128], C = [118, 128];
+      const lerp = (p, q, s) => [p[0] + (q[0] - p[0]) * s, p[1] + (q[1] - p[1]) * s];
+      let qubits = "", gates = "";
+      const rows = 4;
+      for (let i = 0; i < rows; i++) {
+        const l = lerp(A, B, i / (rows - 1)), r = lerp(A, C, i / (rows - 1));
+        for (let j = 0; j <= i; j++) {
+          const [x, y] = i ? lerp(l, r, j / i) : A;
+          qubits += `<circle class="il-dot blue" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"/>`;
+        }
+      }
+      // A row of physical T gates above the patch.
+      [[44, 18], [70, 12], [96, 18]].forEach(([x, y]) => {
+        gates += `<line class="il-faint" x1="${x}" y1="${y + 9}" x2="${x * 0.6 + 28}" y2="${y + 28}"/>`;
+        gates += `<rect class="il-box" x="${x - 9}" y="${y - 9}" width="18" height="18" rx="4"/>` + text(x, y + 4, "T", "strong serif");
+      });
+      // Fault tolerance of the check versus what the code allows.
+      const bx = 176, bw = 120;
+      return svg(
+        `<polygon class="il-region" points="${pts([A, B, C])}"/>` + qubits + gates +
+        text(70, 150, L({ en: "encoded T state", ca: "estat T codificat" })) +
+        text(70, 164, L({ en: "checked with T gates", ca: "comprovat amb portes T" })) +
+        arrow(128, 92, 160, 92) +
+        text(bx, 58, L({ en: "faults the code allows", ca: "errors que permet el codi" }), "", "start") +
+        `<rect class="il-box" x="${bx}" y="64" width="${bw}" height="14" rx="7"/>` +
+        `<rect class="il-green" x="${bx}" y="64" width="${bw}" height="14" rx="7"/>` +
+        text(bx, 104, L({ en: "faults the checks tolerate", ca: "errors que toleren les comprovacions" }), "", "start") +
+        `<rect class="il-box" x="${bx}" y="110" width="${bw}" height="14" rx="7"/>` +
+        `<rect class="il-yellow" x="${bx}" y="110" width="${bw / 2}" height="14" rx="7"/>` +
+        text(bx + bw / 2 + 8, 121, "≤ ½", "strong", "start") +
+        text(160, 190, L({ en: "one code decides which faults are harmful", ca: "un sol codi decideix quins errors fan mal" }), "strong")
+      );
+    },
+
     // Evenly spaced energy ladder, and an error that averages out over one period.
     RCS() {
       let ladder = "";

@@ -33,7 +33,7 @@ Add an object to `publications`:
   status: "preprint",               // or "published" (green on the map)
   firstAuthor: true,                // thick ring on the map
   topics: ["qc", "lr"],             // qc = Quantum Control, po = Polynomial Optimization, lr = Low-rank Structure, qcomp = Quantum Computing
-  map: [760, 300],                  // bubble position in the research map (omit to keep it off the map)
+                                    // the research map places the bubble between these topics by itself (map: false keeps it off)
   links: { arxiv: "…", journal: "…", code: "…" },
   cite: { journal: "Physical Review A", volume: "112", number: "062612", doi: "…" }, // published papers only
   plain: {                          // the plain-words story behind the paper's card in "Papers and preprints"

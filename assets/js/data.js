@@ -51,6 +51,9 @@ window.SITE = {
   },
 
   news: [
+    { date: "2026-11", kind: "preprint", paper: "MSC", text: {
+      en: "New preprint with Jakub Mareček: <em>The limits of magic-state cultivation</em>.",
+      ca: "Nou preprint amb Jakub Mareček: <em>The limits of magic-state cultivation</em>." } },
     { date: "2026-11", kind: "published", paper: "LR2Q", text: {
       en: "Published in APS Open Science: <em>Low-rank geometry of two-qubit gates</em>.",
       ca: "Publicat a APS Open Science: <em>Low-rank geometry of two-qubit gates</em>." } },
@@ -72,9 +75,11 @@ window.SITE = {
   ],
 
   // Research areas in the research map. mapLabel: the lines inside the map bubble.
-  // The first three form the original triangle; others set their own position `at` and radius `r`.
+  // The map is laid out automatically: the `hub` topic sits in the middle and the others around it,
+  // at `angle` degrees (0 = right, 90 = down). Papers are placed between the topics they list.
   topics: {
     qc: {
+      hub: true,
       name: { en: "Quantum Control", ca: "Control quàntic" },
       mapLabel: { en: ["Quantum", "Control"], ca: ["Control", "quàntic"] },
       blurb: {
@@ -83,6 +88,7 @@ window.SITE = {
       }
     },
     po: {
+      angle: 150,
       name: { en: "Polynomial Optimization", ca: "Optimització polinòmica" },
       mapLabel: { en: ["Polynomial", "Optimization"], ca: ["Optimització", "polinòmica"] },
       blurb: {
@@ -91,6 +97,7 @@ window.SITE = {
       }
     },
     lr: {
+      angle: 30,
       name: { en: "Low-rank Structure", ca: "Estructura de rang baix" },
       mapLabel: { en: ["Low-rank", "Structure"], ca: ["Estructura", "de rang baix"] },
       blurb: {
@@ -98,13 +105,10 @@ window.SITE = {
         ca: "Xarxes de tensors i descomposicions tensorials (MPO, tensor trains, rang CP) que fan tractables problemes molt grans."
       }
     },
-    // A fourth, smaller topic in the top-left corner (outside the original triangle).
     qcomp: {
+      angle: -90,
       name: { en: "Quantum Computing", ca: "Computació quàntica" },
       mapLabel: { en: ["Quantum", "Computing"], ca: ["Computació", "quàntica"] },
-      at: [228, 150],
-      links: ["qc"], // connector to the Quantum Control circle
-      r: 80,
       blurb: {
         en: "Fault-tolerant quantum computing: how much it costs to produce the resources, such as magic states, that make universal quantum computation possible.",
         ca: "Computació quàntica tolerant a errors: quant costa produir els recursos, com els estats màgics, que fan possible la computació quàntica universal."
@@ -115,10 +119,37 @@ window.SITE = {
   /*
    * Publications, newest first.
    * status: "published" | "preprint"   firstAuthor: true if I am first author
-   * topics: keys from `topics` above (papers in two topics sit in the overlap)
-   * map: [x, y] position of the bubble in the research map (omit to leave it off the map)
+   * topics: keys from `topics` above; the paper sits between them on the research map
+   * map: false keeps a paper off the research map (papers without topics are left off anyway)
    */
   publications: [
+    {
+      id: "MSC",
+      title: "The limits of magic-state cultivation",
+      authors: ["Llorenç Balada Gaggioli", "Jakub Mareček"],
+      venue: { en: "arXiv preprint", ca: "Preprint a arXiv" },
+      date: "2026-11-18",
+      status: "preprint",
+      firstAuthor: true,
+      topics: ["qcomp"],
+      links: { arxiv: "https://arxiv.org/abs/2611.24852" },
+      plain: {
+        hook: { en: "When a magic state is checked with the very gates it is meant to provide, which mistakes slip through?", ca: "Quan un estat màgic es comprova amb les mateixes portes que ha de proporcionar, quins errors s'escapen?" },
+        text: {
+          en: [
+            "Fault-tolerant quantum computers need magic states to run every possible algorithm, and making them is expensive. Magic-state cultivation is a newer, cheaper recipe: it prepares a T state inside an error-correcting code and keeps checking it with physical T gates. The usual theory of fault tolerance rests on Pauli algebra, which breaks down at exactly these non-Clifford gates, so there was no exact way to tell which faults in such a circuit are harmful.",
+            "We build that theory. For any circuit that prepares a magic state with non-Clifford gates and postselection, a single stabilizer code placed on the non-Clifford gates decides which faults are harmful. This ties cultivation to distillation, gives a lower bound on how many T gates cultivation needs, and gives an exact test for any design.",
+            "Cultivation has been designed with S gates standing in for T gates, because they are much easier to simulate. We show that this stand-in can only make a check look stronger than it is, and that the checks in use on colour and surface codes tolerate at most half as many faults as their code allows. The theory also gives checks that use only nearest-neighbour connections and keep the full distance, certified up to code distance nine."
+          ],
+          ca: [
+            "Els ordinadors quàntics tolerants a errors necessiten estats màgics per poder executar qualsevol algorisme, i produir-los és car. El cultiu d'estats màgics és una recepta més nova i més barata: prepara un estat T dins d'un codi corrector d'errors i el va comprovant amb portes T físiques. La teoria habitual de la tolerància a errors es basa en l'àlgebra de Pauli, que deixa de funcionar justament en aquestes portes no Clifford, de manera que no hi havia cap manera exacta de saber quins errors d'un circuit així són perjudicials.",
+            "Construïm aquesta teoria. Per a qualsevol circuit que prepari un estat màgic amb portes no Clifford i postselecció, un sol codi estabilitzador situat sobre les portes no Clifford decideix quins errors són perjudicials. Això lliga el cultiu amb la destil·lació, dona una cota inferior del nombre de portes T que necessita el cultiu i ofereix una prova exacta per a qualsevol disseny.",
+            "El cultiu s'ha dissenyat fent servir portes S en lloc de portes T, perquè són molt més fàcils de simular. Demostrem que aquest substitut només pot fer que una comprovació sembli més forta del que és, i que les comprovacions que es fan servir en codis de color i de superfície toleren com a màxim la meitat dels errors que permet el seu codi. La teoria també dona comprovacions que només fan servir connexions entre veïns propers i mantenen tota la distància, certificades fins a distància de codi nou."
+          ]
+        }
+      },
+      abstract: "Fault tolerance is understood through Pauli algebra, which fails at non-Clifford gates. Circuits such as magic-state cultivation, which checks an encoded T state with physical T gates, have therefore lacked an exact theory of which faults are harmful. We develop such a theory and show that, for any circuit that prepares a magic state with non-Clifford gates and postselection, one stabilizer code on the non-Clifford gates decides which faults are harmful. This ties cultivation to distillation, bounds its T-count from below and gives an exact test. For a single check on an ideally encoded state, the fault distance reduces to Pauli algebra on the code. As a use case, we analyze the S gates that have stood in for T gates in the design of cultivation. We show that this proxy can only overstate the fault distance of such a check, and that the checks in use, on color and surface codes, tolerate at most half as many faults as their code allows. The theory also yields nearest-neighbor checks that keep the full distance, certified up to code distance nine."
+    },
     {
       id: "LR2Q",
       title: "Low-rank geometry of two-qubit gates",
@@ -128,7 +159,6 @@ window.SITE = {
       status: "published",
       firstAuthor: true,
       topics: ["qc", "lr"],
-      map: [795, 295],
       links: { journal: "https://doi.org/10.1103/nrx9-9p92", code: "https://github.com/llorebaga/LR_2qubit" },
       cite: { journal: "APS Open Science", volume: "1", number: "000206", doi: "10.1103/nrx9-9p92" },
       plain: {
@@ -157,7 +187,6 @@ window.SITE = {
       status: "preprint",
       firstAuthor: true,
       topics: ["qcomp"],
-      map: [186, 290],
       links: { arxiv: "https://arxiv.org/abs/2610.31115" },
       plain: {
         hook: { en: "What is the fewest noisy ingredients a magic-state factory can get away with?", ca: "Quin és el mínim d'ingredients sorollosos amb què pot funcionar una fàbrica d'estats màgics?" },
@@ -185,7 +214,6 @@ window.SITE = {
       status: "preprint",
       firstAuthor: true,
       topics: ["qc"],
-      map: [448, 58],
       links: { arxiv: "https://arxiv.org/abs/2610.21596", code: "https://github.com/llorebaga/RobustSubspace" },
       plain: {
         hook: { en: "If you know what kind of error you face, how fast can you cancel it?", ca: "Si saps de quin tipus és l'error, com de ràpid el pots cancel·lar?" },
@@ -213,7 +241,6 @@ window.SITE = {
       status: "preprint",
       firstAuthor: false,
       topics: ["qc", "po"],
-      map: [310, 360],
       links: { arxiv: "https://arxiv.org/abs/2606.24645" },
       plain: {
         hook: { en: "Proofs of what a quantum controller can and cannot do in a given time.", ca: "Proves del que un control quàntic pot i no pot fer en un temps donat." },
@@ -241,7 +268,6 @@ window.SITE = {
       status: "preprint",
       firstAuthor: true,
       topics: ["po", "lr"],
-      map: [600, 610],
       links: { arxiv: "https://arxiv.org/abs/2604.17563", code: "https://github.com/llorebaga/SLPOP" },
       plain: {
         hook: { en: "Optimizing functions that are computed step by step, like a chain.", ca: "Optimitzar funcions que es calculen pas a pas, com una cadena." },
@@ -269,7 +295,6 @@ window.SITE = {
       status: "published",
       firstAuthor: false,
       topics: ["qc"],
-      map: [672, 58],
       links: { journal: "https://journals.aps.org/prresearch/abstract/10.1103/y8nw-n1wb", code: "https://github.com/llorebaga/RandomSE" },
       cite: { journal: "Physical Review Research", volume: "8", number: "013150", doi: "10.1103/y8nw-n1wb" },
       plain: {
@@ -298,7 +323,6 @@ window.SITE = {
       status: "published",
       firstAuthor: true,
       topics: ["qc", "lr"],
-      map: [745, 350],
       links: { journal: "https://journals.aps.org/pra/abstract/10.1103/9mfk-gg3x", code: "https://github.com/llorebaga/QCMPO" },
       cite: { journal: "Physical Review A", volume: "112", number: "062612", doi: "10.1103/9mfk-gg3x" },
       plain: {
@@ -327,7 +351,6 @@ window.SITE = {
       status: "preprint",
       firstAuthor: true,
       topics: ["po", "lr"],
-      map: [520, 610],
       links: { arxiv: "https://arxiv.org/abs/2512.08394", code: "https://github.com/llorebaga/LRPOP" },
       plain: {
         hook: { en: "When a polynomial hides a simple structure, its global minimum can be found at huge scale.", ca: "Quan un polinomi amaga una estructura senzilla, se'n pot trobar el mínim global a gran escala." },
@@ -355,7 +378,6 @@ window.SITE = {
       status: "published",
       firstAuthor: false,
       topics: ["qc", "po"],
-      map: [340, 288],
       links: { journal: "https://journals.aps.org/prresearch/abstract/10.1103/g4fb-xm13" },
       cite: { journal: "Physical Review Research", volume: "7", number: "043202", doi: "10.1103/g4fb-xm13" },
       plain: {
@@ -384,7 +406,6 @@ window.SITE = {
       status: "preprint",
       firstAuthor: true,
       topics: ["qc", "po"],
-      map: [395, 350],
       links: { arxiv: "https://arxiv.org/abs/2508.01356", code: "https://github.com/llorebaga/UGS" },
       plain: {
         hook: { en: "Designing quantum gates with a guarantee that the solution is the best one.", ca: "Dissenyar portes quàntiques amb la garantia que la solució és la millor." },
