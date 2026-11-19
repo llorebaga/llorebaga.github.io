@@ -20,12 +20,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=28">
+  <link rel="stylesheet" href="assets/css/style.css?v=29">
   <script>
     // Apply the saved theme before first paint to avoid a flash.
     try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
   </script>
-  <script src="assets/js/i18n.js?v=28"></script>
+  <script src="assets/js/i18n.js?v=29"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -84,13 +84,17 @@
   <main id="main">
     <!-- Hero -->
     <section id="top" class="hero container">
-      <div class="hero-photo">
-        <img id="photo" data-i18n-attr="alt:hero.photoAlt" alt="Portrait of Llorenç Balada Gaggioli" width="480" height="671">
-      </div>
       <div class="hero-text">
         <p class="eyebrow" id="role"></p>
         <h1 id="name"></h1>
+        <p class="hero-eq" role="img" data-i18n-attr="aria-label:hero.eqAria" aria-label="The Schrödinger equation with a control field u(t)"><span aria-hidden="true"><i>i</i>ħ ∂<sub>t</sub>|ψ⟩ = ( <i>H</i><sub>0</sub> + <span class="u"><i>u</i>(<i>t</i>)</span> <i>H</i><sub>1</sub> ) |ψ⟩</span></p>
         <p class="tagline" id="tagline"></p>
+      </div>
+      <div class="hero-photo">
+        <img id="photo" data-i18n-attr="alt:hero.photoAlt" alt="Portrait of Llorenç Balada Gaggioli" width="480" height="671">
+      </div>
+      <div class="hero-pulse" id="hero-pulse"></div>
+      <div class="hero-meta">
         <ul class="affiliations" id="affiliations"></ul>
         <div class="socials" id="socials"></div>
       </div>
@@ -270,10 +274,11 @@
 
   <noscript><p class="container">This site needs JavaScript to show its content. Email: llorenc.balada.gaggioli@fel.cvut.cz</p></noscript>
 
-  <script src="assets/js/data.js?v=28"></script>
-  <script src="assets/js/illustrations.js?v=28"></script>
-  <script src="assets/js/main.js?v=28"></script>
-  <script src="assets/js/explain.js?v=28"></script>
-  <script src="assets/js/places.js?v=28"></script>
+  <script src="assets/js/data.js?v=29"></script>
+  <script src="assets/js/illustrations.js?v=29"></script>
+  <script src="assets/js/main.js?v=29"></script>
+  <script src="assets/js/explain.js?v=29"></script>
+  <script src="assets/js/places.js?v=29"></script>
+  <script src="assets/js/pulse.js?v=29"></script>
 </body>
 </html>

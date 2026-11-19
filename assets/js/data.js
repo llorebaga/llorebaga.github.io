@@ -12,9 +12,10 @@ window.SITE = {
     name: "Llorenç Balada Gaggioli",
     shortName: "LLBG",
     role: { en: "Marie Skłodowska-Curie PhD Fellow", ca: "Investigador predoctoral Marie Skłodowska-Curie" },
+    // The sentence under the equation in the hero.
     tagline: {
-      en: "Quantum optimal control, polynomial optimization & tensor networks",
-      ca: "Control òptim quàntic, optimització polinòmica i xarxes de tensors"
+      en: "I look for the control field u(t) that drives a quantum system to a target state or gate in the shortest possible time, and certify when it is optimal. My tools are polynomial optimization and tensor networks.",
+      ca: "Busco el camp de control u(t) que porta un sistema quàntic a un estat o una porta objectiu en el temps més curt possible, i en certifico l'optimalitat. Les meves eines són l'optimització polinòmica i les xarxes de tensors."
     },
     affiliations: [
       { name: "CTU Prague", detail: { en: "Optimization group, AIC", ca: "Grup d'Optimització, AIC" }, url: "https://www.aic.fel.cvut.cz/research-areas/optimization" },
