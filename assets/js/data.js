@@ -12,10 +12,10 @@ window.SITE = {
     name: "Llorenç Balada Gaggioli",
     shortName: "LLBG",
     role: { en: "Marie Skłodowska-Curie PhD Fellow", ca: "Investigador predoctoral Marie Skłodowska-Curie" },
-    // The sentence under the equation in the hero.
+    // The sentence under the name in the hero.
     tagline: {
-      en: "I look for the control field u(t) that drives a quantum system to a target state or gate in the shortest possible time, and certify when it is optimal. My tools are polynomial optimization and tensor networks.",
-      ca: "Busco el camp de control u(t) que porta un sistema quàntic a un estat o una porta objectiu en el temps més curt possible, i en certifico l'optimalitat. Les meves eines són l'optimització polinòmica i les xarxes de tensors."
+      en: "I study quantum systems through the lens of optimization, looking for the limits of what they can do.",
+      ca: "Estudio els sistemes quàntics des de l'òptica de l'optimització, buscant els límits del que poden fer."
     },
     affiliations: [
       { name: "CTU Prague", detail: { en: "Optimization group, AIC", ca: "Grup d'Optimització, AIC" }, url: "https://www.aic.fel.cvut.cz/research-areas/optimization" },
@@ -47,8 +47,8 @@ window.SITE = {
   },
 
   research: {
-    en: "I study <strong>quantum optimal control</strong>, one of the keys to developing quantum technologies. My tools are <strong>tensor networks</strong>, which let us work with very large systems, and <strong>polynomial optimization</strong>, which finds global solutions to optimization problems. My research looks for connections between these seemingly distinct areas to design new techniques for quantum optimal control.",
-    ca: "Estudio el <strong>control òptim quàntic</strong>, una de les claus per desenvolupar les tecnologies quàntiques. Les meves eines són les <strong>xarxes de tensors</strong>, que permeten treballar amb sistemes molt grans, i l'<strong>optimització polinòmica</strong>, que troba solucions globals als problemes d'optimització. La meva recerca busca connexions entre aquestes àrees aparentment diferents per dissenyar noves tècniques de control òptim quàntic."
+    en: "How good can a quantum device possibly be? Optimizers find good pulses, gates and factories, but cannot tell whether better ones exist. I use <strong>optimization</strong> to answer that question with proofs: <strong>limits</strong> that nothing can beat, and <strong>protocols</strong> that provably reach them. I do this at every level, from control pulses to gates to fault-tolerant magic-state factories. I also develop the optimization methods themselves, <strong>polynomial optimization</strong> and <strong>low-rank structure</strong>, so that these proofs scale to large systems.",
+    ca: "Com de bo pot arribar a ser un dispositiu quàntic? Els optimitzadors troben bons polsos, portes i fàbriques, però no poden dir si n'hi ha de millors. Faig servir l'<strong>optimització</strong> per respondre aquesta pregunta amb proves: <strong>límits</strong> que res no pot superar i <strong>protocols</strong> que hi arriben de manera demostrable. Ho faig a cada nivell, des dels polsos de control fins a les portes i les fàbriques d'estats màgics tolerants a errors. També desenvolupo els mateixos mètodes d'optimització, l'<strong>optimització polinòmica</strong> i l'<strong>estructura de rang baix</strong>, perquè aquestes proves escalin a sistemes grans."
   },
 
   news: [
@@ -77,19 +77,32 @@ window.SITE = {
 
   // Research areas in the research map. mapLabel: the lines inside the map bubble.
   // The map is laid out automatically: the `hub` topic sits in the middle and the others around it,
-  // at `angle` degrees (0 = right, 90 = down). Papers are placed between the topics they list.
+  // at `angle` degrees (0 = right, 90 = down). Papers are placed between the topics they list, so two
+  // topics that share papers must be neighbours around the hub.
+  // all: true makes the hub stand for every paper on the map (papers then list only the outer topics).
+  // Quantum side on the left (control, gates, fault tolerance), methods on the right.
   topics: {
-    qc: {
+    limits: {
       hub: true,
+      all: true,
+      name: { en: "Limits of Quantum Systems", ca: "Límits dels sistemes quàntics" },
+      mapLabel: { en: ["Limits of", "quantum", "systems"], ca: ["Límits dels", "sistemes", "quàntics"] },
+      blurb: {
+        en: "The question behind every paper: what is the best a quantum system can possibly do? Optimization answers it with proofs, limits nothing can beat and protocols that reach them, from control pulses to gates to fault-tolerant factories.",
+        ca: "La pregunta darrere de cada article: què és el millor que pot arribar a fer un sistema quàntic? L'optimització hi respon amb proves, límits que res no pot superar i protocols que hi arriben, des dels polsos de control fins a les portes i les fàbriques tolerants a errors."
+      }
+    },
+    qc: {
+      angle: -130,
       name: { en: "Quantum Control", ca: "Control quàntic" },
       mapLabel: { en: ["Quantum", "Control"], ca: ["Control", "quàntic"] },
       blurb: {
-        en: "Designing control pulses that steer quantum systems, such as gates or state preparation, quickly and accurately.",
-        ca: "Dissenyar polsos de control que guien sistemes quàntics, com ara portes lògiques o preparació d'estats, de manera ràpida i precisa."
+        en: "Designing control pulses that steer quantum systems quickly and accurately, and proving how fast and how well any pulse can ever do it.",
+        ca: "Dissenyar polsos de control que guien sistemes quàntics de manera ràpida i precisa, i demostrar com de ràpid i com de bé ho pot arribar a fer qualsevol pols."
       }
     },
     po: {
-      angle: 150,
+      angle: -50,
       name: { en: "Polynomial Optimization", ca: "Optimització polinòmica" },
       mapLabel: { en: ["Polynomial", "Optimization"], ca: ["Optimització", "polinòmica"] },
       blurb: {
@@ -98,7 +111,7 @@ window.SITE = {
       }
     },
     lr: {
-      angle: 30,
+      angle: 50,
       name: { en: "Low-rank Structure", ca: "Estructura de rang baix" },
       mapLabel: { en: ["Low-rank", "Structure"], ca: ["Estructura", "de rang baix"] },
       blurb: {
@@ -106,10 +119,19 @@ window.SITE = {
         ca: "Xarxes de tensors i descomposicions tensorials (MPO, tensor trains, rang CP) que fan tractables problemes molt grans."
       }
     },
+    gates: {
+      angle: 130,
+      name: { en: "Quantum Gates", ca: "Portes quàntiques" },
+      mapLabel: { en: ["Quantum", "Gates"], ca: ["Portes", "quàntiques"] },
+      blurb: {
+        en: "The basic operations of a quantum computer: how far a gate is from simpler ones, how well it can be imitated, and how to synthesize it at scale.",
+        ca: "Les operacions bàsiques d'un ordinador quàntic: a quina distància és una porta de portes més senzilles, com de bé es pot imitar i com sintetitzar-la a gran escala."
+      }
+    },
     qcomp: {
-      angle: -90,
-      name: { en: "Quantum Computing", ca: "Computació quàntica" },
-      mapLabel: { en: ["Quantum", "Computing"], ca: ["Computació", "quàntica"] },
+      angle: 180,
+      name: { en: "Fault Tolerance", ca: "Tolerància a errors" },
+      mapLabel: { en: ["Fault", "Tolerance"], ca: ["Tolerància", "a errors"] },
       blurb: {
         en: "Fault-tolerant quantum computing: how much it costs to produce the resources, such as magic states, that make universal quantum computation possible.",
         ca: "Computació quàntica tolerant a errors: quant costa produir els recursos, com els estats màgics, que fan possible la computació quàntica universal."

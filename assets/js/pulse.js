@@ -1,137 +1,187 @@
 /*
- * The hero's control pulse u(t): a line across the first screen that visitors can reshape.
- * For a qubit driven on resonance (rotating frame), the area under u(t) is the rotation
- * angle θ, and the chance the qubit ends up flipped from |0⟩ to |1⟩ is sin²(θ/2).
- * The line starts as a Gaussian π pulse.
+ * The hero animation: optimal control of a qubit, computed live (not a recording).
+ *
+ * The qubit has a fixed drift and one bounded control, H(t) = (Δ/2)σz + (u(t)/2)σx, with
+ * |u| ≤ U_MAX and u piecewise constant on N slices of a total time T. A gradient optimizer
+ * (GRAPE-style, with Adam steps) shapes u(t) until the qubit, starting in |0⟩, reaches a
+ * target state. Each success shortens T and tries again; when no pulse is found within the
+ * iteration budget, the last time that worked is shown as the shortest time found, and the
+ * pulse there is close to bang-bang (pinned at ±U_MAX), as time-optimal control predicts.
+ * Then a new target is drawn and it starts over.
  */
 (function () {
   "use strict";
   const host = document.getElementById("hero-pulse");
   if (!host) return;
-  const T = window.I18N.t, LOC = window.I18N.locale;
-  const num = (x, d) => x.toLocaleString(LOC, { minimumFractionDigits: d, maximumFractionDigits: d });
+  const T_ = window.I18N.t;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const N = 220;                 // samples of u(t)
-  const BASE = 0.7;              // baseline (u = 0) as a fraction of the strip height
-  const u = new Float64Array(N); // u(t) in units of the strip height, positive is up
-  const gauss = (i, c, s) => Math.exp(-((i - c) ** 2) / (2 * s * s));
-  const PI_SHAPE = Float64Array.from({ length: N }, (_, i) => 0.52 * gauss(i, N / 2, N * 0.085));
-  const A_PI = PI_SHAPE.reduce((a, b) => a + b, 0); // area that means θ = π
+  // ---------- physics ----------
+  const N = 44, DELTA = 1, U_MAX = 2.4, T0 = 4.2, SHRINK = 0.9, F_OK = 0.995, BUDGET = 260;
+  // One slice: ψ ← exp(-i (hx σx + hz σz) dt) ψ, with hx = u/2, hz = Δ/2. ψ = [ar, ai, br, bi].
+  function step(psi, u, dt) {
+    const hx = u / 2, hz = DELTA / 2, w = Math.hypot(hx, hz), c = Math.cos(w * dt), s = Math.sin(w * dt) / w;
+    const [ar, ai, br, bi] = psi;
+    const Har = hz * ar + hx * br, Hai = hz * ai + hx * bi; // (Hψ)_a
+    const Hbr = hx * ar - hz * br, Hbi = hx * ai - hz * bi; // (Hψ)_b
+    psi[0] = c * ar + s * Hai; psi[1] = c * ai - s * Har;   // cψ - i s Hψ
+    psi[2] = c * br + s * Hbi; psi[3] = c * bi - s * Hbr;
+  }
+  const bloch = ([ar, ai, br, bi]) => [2 * (ar * br + ai * bi), 2 * (ar * bi - ai * br), ar * ar + ai * ai - br * br - bi * bi];
+  // Target state from its Bloch angles: cos(θ/2)|0⟩ + e^{iφ} sin(θ/2)|1⟩.
+  let target, tgt;
+  function newTarget() {
+    const th = 2.2 + Math.random() * 0.9, ph = Math.random() * 2 * Math.PI;
+    target = [Math.cos(th / 2), 0, Math.sin(th / 2) * Math.cos(ph), Math.sin(th / 2) * Math.sin(ph)];
+    tgt = bloch(target);
+  }
+  function fidelity(u, T) {
+    const psi = [1, 0, 0, 0], dt = T / N;
+    for (let k = 0; k < N; k++) step(psi, u[k], dt);
+    const [tr, ti, sr, si] = target, [ar, ai, br, bi] = psi;
+    const re = tr * ar + ti * ai + sr * br + si * bi, im = tr * ai - ti * ar + sr * bi - si * br; // ⟨target|ψ⟩
+    return re * re + im * im;
+  }
 
+  // ---------- optimizer (gradient ascent on the fidelity, Adam steps, clipped to the bounds) ----------
+  let u, T, best, bestT, iter, F, phase, hold, m, v, t;
+  function newRound() {
+    newTarget();
+    const a = Math.random() * 6, b = Math.random() * 6;
+    u = Float64Array.from({ length: N }, (_, k) => 0.9 + 0.5 * Math.sin(a + k / 5) + 0.3 * Math.sin(b + k / 2.3));
+    T = T0; best = null; bestT = null; iter = 0; phase = "opt"; hold = 0;
+    m = new Float64Array(N); v = new Float64Array(N); t = 0;
+    F = fidelity(u, T);
+  }
+  function optStep() {
+    const eps = 1e-5, g = new Float64Array(N), F0 = fidelity(u, T);
+    for (let k = 0; k < N; k++) { const keep = u[k]; u[k] = keep + eps; g[k] = (fidelity(u, T) - F0) / eps; u[k] = keep; }
+    t++;
+    for (let k = 0; k < N; k++) {
+      m[k] = 0.9 * m[k] + 0.1 * g[k]; v[k] = 0.999 * v[k] + 0.001 * g[k] * g[k];
+      const mh = m[k] / (1 - 0.9 ** t), vh = v[k] / (1 - 0.999 ** t);
+      u[k] = Math.max(-U_MAX, Math.min(U_MAX, u[k] + 0.06 * mh / (Math.sqrt(vh) + 1e-8)));
+    }
+    F = fidelity(u, T); iter++;
+    if (F >= F_OK) {                   // it works at this time: remember it, then try a shorter one
+      best = Float64Array.from(u); bestT = T;
+      T *= SHRINK; iter = 0; t = 0; m.fill(0); v.fill(0);
+      F = fidelity(u, T);
+    } else if (iter > BUDGET) {        // no pulse found in time: the last success is the shortest time found
+      if (best) { u = best; T = bestT; F = fidelity(u, T); }
+      phase = "hold"; hold = 0;
+    }
+  }
+
+  // ---------- drawing ----------
   const canvas = document.createElement("canvas");
   canvas.className = "pulse-canvas";
   canvas.setAttribute("role", "img");
-  canvas.setAttribute("aria-label", T("pulse.aria"));
-  const theta = document.createElement("strong"), prob = document.createElement("strong");
-  const note = document.createElement("p"); note.className = "pulse-note"; note.setAttribute("aria-live", "polite");
-  const reset = document.createElement("button");
-  reset.type = "button"; reset.className = "pulse-reset"; reset.textContent = T("pulse.reset");
-  const read = document.createElement("div"); read.className = "pulse-read";
-  const cell = (label, value) => { const d = document.createElement("span"); d.append(value, " ", label); return d; };
-  read.append(cell(T("pulse.area"), theta), cell(T("pulse.prob"), prob));
-  const hint = document.createElement("p"); hint.className = "pulse-hint"; hint.textContent = T("pulse.hint");
-  const foot = document.createElement("div"); foot.className = "pulse-foot";
-  const left = document.createElement("div"); left.className = "pulse-left"; left.append(hint, reset);
-  foot.append(left, read);
-  host.append(canvas, foot, note);
-
-  let W = 0, H = 0, dpr = 1, dirty = true, cursor = null, intro = reduceMotion ? 1 : 0;
+  canvas.setAttribute("aria-label", T_("pulse.aria"));
+  host.append(canvas);
   const ctx = canvas.getContext("2d");
+  let W = 0, H = 0, dpr = 1;
   function size() {
     const r = canvas.getBoundingClientRect();
-    dpr = Math.min(2, window.devicePixelRatio || 1);
-    W = r.width; H = r.height;
+    dpr = Math.min(2, window.devicePixelRatio || 1); W = r.width; H = r.height;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-    dirty = true;
   }
-  new ResizeObserver(() => { size(); wake(); }).observe(canvas);
-
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  const X = (i) => 8 + (i / (N - 1)) * (W - 16);
-  const Y = (v) => H * BASE - v * H;
+  let view = 0.6;                      // slowly turning view of the Bloch sphere
+
   function draw() {
     if (!W) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    const blue = css("--blue"), coral = css("--coral"), faint = css("--ink-faint"), edge = css("--cluster-stroke");
-    const shown = Math.max(1, Math.round(N * intro));
-    // Area under the curve: what sets the rotation angle.
-    for (const sign of [1, -1]) {
-      ctx.beginPath();
-      ctx.moveTo(X(0), Y(0));
-      for (let i = 0; i < shown; i++) ctx.lineTo(X(i), Y(sign > 0 ? Math.max(0, u[i]) : Math.min(0, u[i])));
-      ctx.lineTo(X(shown - 1), Y(0));
-      ctx.closePath();
-      ctx.fillStyle = sign > 0 ? blue : coral;
-      ctx.globalAlpha = 0.13; ctx.fill(); ctx.globalAlpha = 1;
-    }
-    // Time axis.
-    ctx.strokeStyle = edge; ctx.lineWidth = 1; ctx.setLineDash([4, 5]);
-    ctx.beginPath(); ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(N - 1), Y(0)); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = faint; ctx.font = "italic 15px 'Libre Baskerville', Georgia, serif";
-    ctx.textAlign = "right"; ctx.fillText("t", X(N - 1), Y(0) + 20);
-    // The pulse.
-    ctx.strokeStyle = blue; ctx.lineWidth = 3; ctx.lineJoin = "round"; ctx.lineCap = "round";
+    const blue = css("--blue"), green = css("--green"), yellow = css("--yellow"), faint = css("--ink-faint"), edge = css("--cluster-stroke"), ink = css("--ink");
+    const R = Math.min(H * 0.4, W * 0.16), cx = W - R - 6, cy = H / 2;
+    const x0 = 6, x1 = cx - R - 34, mid = H * 0.5, amp = H * 0.36;
+    const X = (time) => x0 + (time / T0) * (x1 - x0), Y = (val) => mid - (val / U_MAX) * amp;
+    ctx.font = "italic 14px 'Libre Baskerville', Georgia, serif";
+
+    // Bounds ±U_MAX and the time axis.
+    ctx.strokeStyle = edge; ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
+    for (const val of [U_MAX, -U_MAX]) { ctx.beginPath(); ctx.moveTo(x0, Y(val)); ctx.lineTo(x1, Y(val)); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(x0, Y(0)); ctx.lineTo(x1, Y(0)); ctx.stroke();
+    // Current duration T.
+    ctx.strokeStyle = phase === "hold" ? green : faint; ctx.setLineDash([2, 4]);
+    ctx.beginPath(); ctx.moveTo(X(T), Y(U_MAX) - 6); ctx.lineTo(X(T), Y(-U_MAX) + 6); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = faint; ctx.textAlign = "right"; ctx.fillText("t", x1, Y(0) - 7);
+    ctx.textAlign = "left"; ctx.fillStyle = blue; ctx.fillText("u(t)", x0, Y(U_MAX) - 8);
+
+    // The pulse: piecewise constant, filled to the axis.
+    const dt = T / N;
+    ctx.beginPath(); ctx.moveTo(X(0), Y(0));
+    for (let k = 0; k < N; k++) { ctx.lineTo(X(k * dt), Y(u[k])); ctx.lineTo(X((k + 1) * dt), Y(u[k])); }
+    ctx.lineTo(X(T), Y(0)); ctx.closePath();
+    ctx.fillStyle = blue; ctx.globalAlpha = 0.12; ctx.fill(); ctx.globalAlpha = 1;
     ctx.beginPath();
-    for (let i = 0; i < shown; i++) i ? ctx.lineTo(X(i), Y(u[i])) : ctx.moveTo(X(i), Y(u[i]));
+    for (let k = 0; k < N; k++) { k ? ctx.lineTo(X(k * dt), Y(u[k])) : ctx.moveTo(X(0), Y(u[0])); ctx.lineTo(X((k + 1) * dt), Y(u[k])); }
+    ctx.strokeStyle = blue; ctx.lineWidth = 2.5; ctx.lineJoin = "round"; ctx.stroke();
+    if (phase === "hold") {
+      ctx.fillStyle = green; ctx.font = "600 12px Inter, system-ui, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(T_("pulse.min"), Math.min(Math.max(X(T), x0 + 60), x1 - 60), Y(-U_MAX) + 22);
+    }
+
+    // Bloch sphere: outline, equator, axis, the path the pulse drives, and the target.
+    const el = 0.38, ce = Math.cos(el), se = Math.sin(el), cv = Math.cos(view), sv = Math.sin(view);
+    const P = ([x, y, z]) => { const xr = x * cv - y * sv, yr = x * sv + y * cv; return [cx + R * xr, cy - R * (z * ce - yr * se), yr]; };
+    ctx.strokeStyle = edge; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.stroke();
+    ctx.beginPath();
+    for (let a = 0; a <= 64; a++) { const [px, py] = P([Math.cos(a / 32 * Math.PI), Math.sin(a / 32 * Math.PI), 0]); a ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
     ctx.stroke();
-    ctx.fillStyle = blue; ctx.textAlign = "left";
-    ctx.fillText("u(t)", X(0), Y(0) - 12);
-    if (cursor) {
-      ctx.strokeStyle = blue; ctx.globalAlpha = 0.35; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(cursor.x, cursor.y, 14, 0, 2 * Math.PI); ctx.stroke(); ctx.globalAlpha = 1;
-    }
+    const [nx, ny] = P([0, 0, 1]), [sx, sy] = P([0, 0, -1]);
+    ctx.setLineDash([2, 4]); ctx.beginPath(); ctx.moveTo(nx, ny); ctx.lineTo(sx, sy); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = faint; ctx.font = "13px 'Libre Baskerville', Georgia, serif"; ctx.textAlign = "center";
+    ctx.fillText("|0⟩", nx, ny - 8); ctx.fillText("|1⟩", sx, sy + 17);
+    // Path under the current pulse.
+    const psi = [1, 0, 0, 0], sub = 4;
+    ctx.beginPath(); let [px, py] = P(bloch(psi)); ctx.moveTo(px, py);
+    for (let k = 0; k < N; k++) for (let j = 0; j < sub; j++) { step(psi, u[k], dt / sub); [px, py] = P(bloch(psi)); ctx.lineTo(px, py); }
+    ctx.strokeStyle = blue; ctx.lineWidth = 2; ctx.stroke();
+    const [tx, ty] = P(tgt);
+    ctx.strokeStyle = green; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(tx, ty, 8, 0, 2 * Math.PI); ctx.stroke();
+    ctx.fillStyle = yellow; ctx.strokeStyle = ink; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(px, py, 5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
   }
 
-  function readout() {
-    const th = (u.reduce((a, b) => a + b, 0) / A_PI) * Math.PI;
-    theta.textContent = `θ = ${num(th / Math.PI, 2)}π`;
-    prob.textContent = `${num(100 * Math.sin(th / 2) ** 2, 0)}%`;
-    const r = Math.abs(th) / Math.PI, near = (x) => Math.abs(r - x) < 0.03;
-    note.textContent = near(0) ? T("pulse.none") : near(0.5) ? T("pulse.half") : near(1) ? T("pulse.pi") : near(2) ? T("pulse.two") : "";
+  // ---------- loop: a few optimizer steps per frame; sleeps when off screen ----------
+  const STEPS_PER_S = 40;            // optimizer steps per second, the same on every screen
+  let visible = true, running = false, last = 0, acc = 0;
+  function frame(now) {
+    running = false;
+    if (!visible || document.hidden) return;
+    const dtf = Math.min(0.05, (now - (last || now)) / 1000); last = now;
+    view += dtf * 0.25;
+    if (phase === "opt") { acc += dtf * STEPS_PER_S; while (acc >= 1 && phase === "opt") { optStep(); acc--; } }
+    else if ((hold += dtf) > 3.2) newRound();
+    draw();
+    schedule();
+  }
+  // requestAnimationFrame, with a timer as backup when frames are throttled.
+  function schedule() {
+    if (running) return;
+    running = true;
+    let done = false;
+    const go = (ts) => { if (!done) { done = true; frame(typeof ts === "number" ? ts : performance.now()); } };
+    requestAnimationFrame(go); setTimeout(go, 60);
   }
 
-  // Drawing: the stretch of the pulse under the cursor moves toward the cursor's height.
-  function sculpt() {
-    if (!cursor) return false;
-    const c = ((cursor.x - 8) / (W - 16)) * (N - 1), s = (18 / (W - 16)) * (N - 1);
-    const target = Math.max(-(1 - BASE) + 0.04, Math.min(BASE - 0.04, (H * BASE - cursor.y) / H));
-    let moved = false;
-    for (let i = Math.max(0, Math.floor(c - 4 * s)); i <= Math.min(N - 1, Math.ceil(c + 4 * s)); i++) {
-      const k = 0.28 * gauss(i, c, s), d = (target - u[i]) * k;
-      if (Math.abs(d) > 1e-5) { u[i] += d; moved = true; }
-    }
-    return moved;
+  newRound();
+  new ResizeObserver(() => { size(); draw(); }).observe(canvas);
+  new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+  if (reduceMotion) {
+    // One still frame: run the whole search at once and show its result.
+    let guard = 0;
+    while (phase === "opt" && guard++ < 20000) optStep();
+    size(); draw();
+    return;
   }
-  const point = (e) => { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
-  canvas.addEventListener("pointermove", (e) => {
-    if (e.pointerType !== "mouse" && !e.buttons) return; // touch and pen draw while pressed
-    cursor = point(e); dirty = true; wake();
-  });
-  canvas.addEventListener("pointerdown", (e) => { cursor = point(e); dirty = true; wake(); });
-  const lift = () => { cursor = null; dirty = true; wake(); };
-  canvas.addEventListener("pointerleave", lift);
-  canvas.addEventListener("pointerup", (e) => { if (e.pointerType !== "mouse") lift(); });
-  reset.addEventListener("click", () => { u.set(PI_SHAPE); readout(); dirty = true; wake(); });
-
-  // Render loop that sleeps when nothing changes.
-  let running = false;
-  function frame() {
-    if (intro < 1) { intro = Math.min(1, intro + 0.025); dirty = true; }
-    if (sculpt()) { readout(); dirty = true; }
-    if (dirty) { draw(); dirty = false; }
-    if (intro < 1 || cursor) next(); else running = false;
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver((es) => { visible = es.some((e) => e.isIntersecting); if (visible) { last = 0; schedule(); } }).observe(canvas);
   }
-  // requestAnimationFrame, with a timer as backup for when frames are throttled (hidden tab or pane).
-  const next = () => { let done = false; const go = () => { if (!done) { done = true; frame(); } }; requestAnimationFrame(go); setTimeout(go, 50); };
-  function wake() { if (!running) { running = true; next(); } }
-  // Redraw in the right colours when the theme changes.
-  new MutationObserver(() => { dirty = true; wake(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { dirty = true; wake(); });
-
-  u.set(PI_SHAPE);
-  readout();
-  size();
-  wake();
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { last = 0; schedule(); } });
+  size(); schedule();
 })();
